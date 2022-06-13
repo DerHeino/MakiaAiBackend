@@ -15,8 +15,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-
-	"google.golang.org/api/option"
 )
 
 var global_ctx context.Context      // initialized once
@@ -26,8 +24,8 @@ var DeviceList map[string]model.LocalDevice
 func Start_firebase() *firestore.Client {
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("healthcheck-api-firebase-adminsdk-l2836-d01412f428.json")
-	app, err := firebase.NewApp(ctx, nil, sa)
+	//sa := option.WithCredentialsFile("healthcheck-api-firebase-adminsdk-l2836-d01412f428.json")
+	app, err := firebase.NewApp(ctx, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
