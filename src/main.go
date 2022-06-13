@@ -13,10 +13,10 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-/*func homePage(w http.ResponseWriter, r *http.Request) {
+func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome")
 	fmt.Println("Endpoint Hit: homePage")
-}*/
+}
 
 func login(w http.ResponseWriter, r *http.Request) {
 
@@ -248,6 +248,8 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	r := chi.NewRouter()
 
+	r.Post("/", homePage)
+
 	r.Post("/login", login)
 
 	r.Get("/project", getProject)
@@ -266,7 +268,7 @@ func handleRequests() {
 	r.Get("/device/{deviceId}/image", getImage)
 	r.Post("/device/{deviceId}/image", uploadImage)
 
-	log.Fatal(http.ListenAndServe(":10000", r))
+	log.Fatal(http.ListenAndServe(":80", r))
 }
 
 func main() {
