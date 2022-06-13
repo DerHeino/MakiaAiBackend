@@ -270,6 +270,7 @@ func handleRequests() {
 }
 
 func main() {
+	log.Println("Starting server v1")
 	// build connection to firestore database
 	client := network.Start_firebase()
 
