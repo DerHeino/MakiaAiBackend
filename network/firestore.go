@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"health/model"
 	"log"
+	"os"
 	"time"
 
 	"google.golang.org/api/iterator"
@@ -22,6 +23,7 @@ var global_client *firestore.Client // initialized once
 var DeviceList map[string]model.LocalDevice
 
 func Start_firebase() *firestore.Client {
+	os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	// Use a service account
 	ctx := context.Background()
 	//sa := option.WithCredentialsFile("healthcheck-api-firebase-adminsdk-l2836-d01412f428.json")
