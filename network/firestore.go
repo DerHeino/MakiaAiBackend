@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,8 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"google.golang.org/api/option"
 
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
@@ -23,12 +26,12 @@ var global_client *firestore.Client // initialized once
 var DeviceList map[string]model.LocalDevice
 
 func Start_firebase() *firestore.Client {
-	key := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-	log.Println(key)
+
+	d, _ := base64.StdEncoding.DecodeString(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	// Use a service account
 	ctx := context.Background()
-	//sa := option.WithCredentialsFile("healthcheck-api-firebase-adminsdk-l2836-d01412f428.json")
-	app, err := firebase.NewApp(ctx, nil)
+	sa := option.WithCredentialsJSON(d)
+	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
 	}
