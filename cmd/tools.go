@@ -82,12 +82,13 @@ func MultiFormImage(r *http.Request) (image.Image, error) {
 	err := r.ParseMultipartForm(r.ContentLength)
 	if err != nil {
 		log.Println(err.Error())
-		return nil, errors.New("Form formatting error")
+		return nil, errors.New("Form formatting error 1")
 	}
 
 	file, _, err := r.FormFile("image")
 	if err != nil {
-		return nil, errors.New("Form formatting error")
+		log.Println(err.Error())
+		return nil, errors.New("Form formatting error 2")
 	}
 
 	// image in memory

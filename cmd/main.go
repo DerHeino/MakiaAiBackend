@@ -120,6 +120,8 @@ func getDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 func postDevice(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println(r.Header)
 	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
 		fmt.Fprint(w, err.Error())
 		return
@@ -199,7 +201,7 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 
 	deviceId := chi.URLParam(r, "deviceId")
 
-	fmt.Println(network.DeviceList)
+	//fmt.Println(network.DeviceList)
 
 	image := route.GetImage(deviceId)
 	if image == nil {
@@ -226,6 +228,7 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 	deviceId := chi.URLParam(r, "deviceId")
 
 	contentType := r.Header.Get("Content-Type")
+
 	if match, _ := regexp.MatchString("multipart/form-data", contentType); match {
 		myImage, err := MultiFormImage(r)
 		if err != nil {
@@ -263,7 +266,7 @@ func handleRequests() {
 	r.Get("/device/{deviceId}/image", getImage)
 	r.Post("/device/{deviceId}/image", uploadImage)
 
-	log.Fatal(http.ListenAndServe("localhost:10000", r))
+	log.Fatal(http.ListenAndServe(":10000", r))
 }
 
 func main() {

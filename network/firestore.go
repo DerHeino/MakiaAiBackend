@@ -176,6 +176,11 @@ func SetDeviceFire(device *model.Device) error {
 		log.Println(err.Error())
 		return err
 	}
+
+	if _, ok := DeviceList[device.Id]; !ok {
+		DeviceList[device.Id] = model.LocalDevice{}
+	}
+
 	return nil
 }
 

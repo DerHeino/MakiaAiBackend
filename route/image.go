@@ -14,9 +14,7 @@ func getDeviceList() {
 }
 
 func PostImage(deviceId string, image *image.Image) bool {
-	if deviceList == nil {
-		getDeviceList()
-	}
+	getDeviceList()
 
 	fmt.Println(deviceList, "ri")
 	if entry, ok := deviceList[deviceId]; ok {
@@ -30,9 +28,7 @@ func PostImage(deviceId string, image *image.Image) bool {
 }
 
 func GetImage(deviceId string) *image.Image {
-	if deviceList == nil {
-		getDeviceList()
-	}
+	getDeviceList()
 
 	if _, ok := deviceList[deviceId]; ok {
 		if deviceList[deviceId].Image != nil {
