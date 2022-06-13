@@ -29,10 +29,11 @@ func Start_firebase() *firestore.Client {
 
 	d, _ := base64.StdEncoding.DecodeString(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	a, b := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+	x, _ := json.Marshal(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	fmt.Println(d, a, b)
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsJSON(d)
+	sa := option.WithCredentialsJSON(x)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
