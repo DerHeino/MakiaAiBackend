@@ -27,7 +27,7 @@ var DeviceList map[string]model.LocalDevice
 func Start_firebase() *firestore.Client {
 
 	d, _ := json.Marshal(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-	fmt.Println(d)
+	fmt.Println(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 	// Use a service account
 	ctx := context.Background()
 	sa := option.WithCredentialsJSON(d)
