@@ -8,6 +8,7 @@ import (
 	"image/jpeg"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 
 	"github.com/go-chi/chi/v5"
@@ -268,7 +269,9 @@ func handleRequests() {
 	r.Get("/device/{deviceId}/image", getImage)
 	r.Post("/device/{deviceId}/image", uploadImage)
 
-	log.Fatal(http.ListenAndServe(":80", r))
+	port := ":" + os.Getenv("$PORT")
+	log.Println(port)
+	log.Fatal(http.ListenAndServe(port, r))
 }
 
 func main() {
