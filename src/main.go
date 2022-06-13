@@ -269,7 +269,7 @@ func handleRequests() {
 	r.Get("/device/{deviceId}/image", getImage)
 	r.Post("/device/{deviceId}/image", uploadImage)
 
-	port := ":" + os.Getenv("$PORT")
+	port := ":" + os.Getenv("PORT")
 	log.Println(port)
 	log.Fatal(http.ListenAndServe(port, r))
 }
