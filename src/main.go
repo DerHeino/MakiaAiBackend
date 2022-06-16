@@ -15,8 +15,8 @@ import (
 )
 
 func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome")
-	fmt.Println("Endpoint Hit: homePage")
+	fmt.Fprintf(w, "HealthCheck-API \"/\"")
+	fmt.Println("Endpoint Hit: home")
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -249,7 +249,7 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	r := chi.NewRouter()
 
-	r.Post("/", homePage)
+	r.Get("/", homePage)
 
 	r.Post("/login", login)
 
@@ -270,12 +270,12 @@ func handleRequests() {
 	r.Post("/device/{deviceId}/image", uploadImage)
 
 	port := ":" + os.Getenv("PORT")
-	log.Println(port)
 	log.Fatal(http.ListenAndServe(port, r))
 }
 
 func main() {
-	log.Println("Starting server v1")
+	setConfig()
+
 	// build connection to firestore database
 	client := network.Start_firebase()
 
