@@ -126,8 +126,10 @@ func ValidateTokenForm(token string, admin bool) error {
 		tokenString := strings.TrimSpace(parts[1])
 		//fmt.Println(token)
 
-		if ok, _ := route.ValidateToken(tokenString); ok {
+		if ok, err := route.ValidateToken(tokenString, admin); ok {
 			return nil
+		} else if err == nil {
+			return errors.New("access denied, admin rights required")
 		} else {
 			return errors.New("access denied, Token invalid: " + tokenString)
 		}

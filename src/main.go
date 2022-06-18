@@ -17,6 +17,7 @@ import (
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "HealthCheck-API \"/\"")
 	fmt.Println("Endpoint Hit: home")
+	fmt.Fprint(w, network.AdminList)
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +52,7 @@ func getProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func postProject(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
+	if err := ValidateTokenForm(r.Header.Get("Authorization"), true); err != nil {
 		fmt.Fprint(w, err.Error())
 		return
 	}
@@ -86,7 +87,7 @@ func getLocation(w http.ResponseWriter, r *http.Request) {
 }
 
 func postLocation(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
+	if err := ValidateTokenForm(r.Header.Get("Authorization"), true); err != nil {
 		fmt.Fprint(w, err.Error())
 		return
 	}

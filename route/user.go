@@ -97,7 +97,7 @@ func BuildToken(username string) (string, error) {
 
 // needed for POST project and location
 // the only reason this method is still here is for future admin/non-admin differentiation
-func ValidateToken(tokenString string) (bool, error) {
+func ValidateToken(tokenString string, admin bool) (bool, error) {
 	var mySecret []byte = []byte("21062022") // for now
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -109,10 +109,28 @@ func ValidateToken(tokenString string) (bool, error) {
 		return mySecret, nil
 	})
 
-	if _, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return true, err
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if admin {
+			return isAdmin(claims), err
+		} else {
+			return true, err
+		}
 	} else {
 		fmt.Println(err.Error())
 		return false, err
 	}
+}
+
+func isAdmin(claims map[string]interface{}) bool {
+	fmt.Println(claims)
+
+	username := claims["username"].(string)
+
+	for _, admin := range network.AdminList {
+		if admin == username {
+			return true
+		}
+	}
+
+	return false
 }

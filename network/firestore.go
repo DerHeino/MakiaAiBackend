@@ -23,6 +23,7 @@ import (
 var global_ctx context.Context      // initialized once
 var global_client *firestore.Client // initialized once
 var DeviceList map[string]model.LocalDevice
+var AdminList = []string{}
 
 func Start_firebase() *firestore.Client {
 
@@ -52,6 +53,7 @@ func Start_firebase() *firestore.Client {
 	fmt.Println(confirmation)
 
 	CountDevices()
+	GetAdminList()
 
 	return client
 }
@@ -77,6 +79,34 @@ func CountDevices() {
 		if id, ok := id.(string); ok {
 			DeviceList[id] = model.LocalDevice{}
 		}
+	}
+}
+
+func GetAdminList() {
+	userIterator := global_client.Collection("users").Documents(global_ctx)
+
+	for {
+		user, err := userIterator.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return
+		}
+		u, err := user.DataAt("user")
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
+		if u, ok := u.(map[string]interface{}); ok {
+			if admin, ok := u["admin"].(bool); ok {
+				if admin {
+					uname, _ := user.DataAt("username")
+					AdminList = append(AdminList, uname.(string))
+				}
+			}
+		}
+
 	}
 }
 
