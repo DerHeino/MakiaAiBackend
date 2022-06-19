@@ -17,7 +17,6 @@ import (
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "HealthCheck-API \"/\"")
 	fmt.Println("Endpoint Hit: home")
-	fmt.Fprint(w, network.AdminList)
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -196,10 +195,10 @@ func postPing(w http.ResponseWriter, r *http.Request) {
 }
 
 func getImage(w http.ResponseWriter, r *http.Request) {
-	//if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
-	//	fmt.Fprint(w, err.Error())
-	//	return
-	//}
+	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, err.Error())
+		return
+	}
 
 	deviceId := chi.URLParam(r, "deviceId")
 
