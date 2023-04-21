@@ -3,9 +3,10 @@ package route
 import (
 	json "encoding/json"
 	"errors"
+	"fmt"
+	c "health/clog"
 	"health/model"
 	"health/network"
-	"log"
 	"strings"
 
 	mapstructure "github.com/mitchellh/mapstructure"
@@ -17,20 +18,20 @@ func PostLocation(locationMap map[string]interface{}) (string, error) {
 	defer clearModel(&location)
 
 	if err := validateLocation(locationMap); err != nil {
-		log.Println(err.Error())
-		return "", err
+		c.ErrorLog.Printf("missing parameters: %s\n", err.Error())
+		return "", fmt.Errorf("failed to upload location: missing required parameter(s): %s", err)
 	}
 
 	if err := mapstructure.Decode(locationMap, &location); err != nil {
-		log.Println(err.Error())
-		return "", errors.New("failed to convert location")
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to upload location: decoding error")
 	}
 
 	if network.SetLocationFire(&location) {
 		jsonStr, err := json.Marshal(&location)
 		if err != nil {
-			log.Println(err.Error())
-			return "", errors.New("failed to convert uploaded location")
+			c.ErrorLog.Println(err.Error())
+			return "", errors.New("uploaded")
 		}
 		return string(jsonStr), nil
 	} else {
@@ -40,25 +41,24 @@ func PostLocation(locationMap map[string]interface{}) (string, error) {
 
 func validateLocation(locationMap map[string]interface{}) error {
 
-	missing := CountParameters(model.LocationParameters, locationMap)
+	id, missing := CountParameters(model.LocationParameters, locationMap)
 
 	if add, ok := locationMap["address"].(map[string]interface{}); ok {
-		missingAddress := CountParameters(model.AddressParameters, add)
+		_, missingAddress := CountParameters(model.AddressParameters, add)
 		if len(missingAddress) > 0 {
 			missing = append(missing, missingAddress...)
-			return errors.New("missing parameter(s): " + strings.Join(missing, ", "))
+			return errors.New(strings.Join(missing, ", "))
 		}
 	} else {
-		return errors.New("missing parameter(s): " + strings.Join(missing, ", "))
+		return errors.New(strings.Join(missing, ", "))
 	}
 
-	for _, p := range missing {
-		if p == "_id" {
-			locationMap["_id"] = generateUUID()
-		}
-		if p == "name" || p == "address" {
-			return errors.New("missing required parameter(s): " + strings.Join(missing, ", "))
-		}
+	if !id {
+		locationMap["_id"] = generateUUID()
+	}
+
+	if len(missing) > 0 {
+		return errors.New(strings.Join(missing, ", "))
 	}
 
 	return nil

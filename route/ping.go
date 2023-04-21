@@ -4,9 +4,9 @@ import (
 	json "encoding/json"
 	"errors"
 	"fmt"
+	c "health/clog"
 	"health/model"
 	"health/network"
-	"log"
 	"strings"
 
 	mapstructure "github.com/mitchellh/mapstructure"
@@ -18,13 +18,13 @@ func PostPing(pingMap map[string]interface{}) (string, error) {
 	defer clearModel(&ping)
 
 	if err := validatePing(pingMap); err != nil {
-		log.Printf("missing parameters: %s\n", err.Error())
-		return "", fmt.Errorf("missing parameters: %s", err)
+		c.ErrorLog.Printf("missing parameters: %s\n", err.Error())
+		return "", fmt.Errorf("failed to update ping missing parameters: %s", err)
 	}
 
 	if err := mapstructure.Decode(pingMap, &ping); err != nil {
-		log.Println(err.Error())
-		return "", err
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to update ping: decoding error")
 	}
 
 	if val, ok := pingMap["timestamp"]; ok {
@@ -34,28 +34,26 @@ func PostPing(pingMap map[string]interface{}) (string, error) {
 	if val, err := network.UpdatePingFire(&ping); err == nil {
 		jsonStr, err := json.Marshal(&val)
 		if err != nil {
-			log.Println(err.Error())
-			return "", errors.New("failed to convert uploaded device")
+			c.ErrorLog.Println(err.Error())
+			return "", errors.New("return error")
 		}
 		return string(jsonStr), nil
 	} else {
-		log.Println(err.Error())
-		return "", errors.New("failed to update Ping\nreason: " + err.Error())
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to update ping: " + err.Error())
 	}
 }
 
 func validatePing(pingMap map[string]interface{}) error {
 
-	missing := CountParameters(model.PingParameters, pingMap)
+	_, missing := CountParameters(model.PingParameters, pingMap)
 
 	if len(missing) > 0 {
 		return errors.New(strings.Join(missing, ", "))
 	}
 
 	if status, ok := pingMap["status"].(string); ok {
-		if err := validateStatus(status); err != nil {
-			return err
-		}
+		return validateStatus(status)
 	}
 
 	return nil
@@ -68,5 +66,5 @@ func validateStatus(status string) error {
 			return nil
 		}
 	}
-	return errors.New("invalid status")
+	return errors.New("invalid DeviceStatus")
 }

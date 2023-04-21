@@ -3,9 +3,10 @@ package route
 import (
 	json "encoding/json"
 	"errors"
+	"fmt"
+	c "health/clog"
 	"health/model"
 	"health/network"
-	"log"
 	"strings"
 
 	mapstructure "github.com/mitchellh/mapstructure"
@@ -17,19 +18,20 @@ func PostProject(projectMap map[string]interface{}) (string, error) {
 	defer clearModel(&project)
 
 	if err := validateProject(projectMap); err != nil {
-		return "", err
+		c.ErrorLog.Printf("missing parameters: %s\n", err.Error())
+		return "", fmt.Errorf("failed to upload project: missing required parameter(s): %s", err)
 	}
 
 	if err := mapstructure.Decode(projectMap, &project); err != nil {
-		log.Println(err.Error())
-		return "", errors.New("failed to convert project")
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to upload project: decoding error")
 	}
 
 	if network.SetProjectFire(&project) {
 		jsonStr, err := json.Marshal(&project)
 		if err != nil {
-			log.Println(err.Error())
-			return "", errors.New("failed to convert uploaded project")
+			c.ErrorLog.Println(err.Error())
+			return "", errors.New("uploaded")
 		}
 		return string(jsonStr), nil
 	} else {
@@ -39,10 +41,14 @@ func PostProject(projectMap map[string]interface{}) (string, error) {
 
 func validateProject(projectMap map[string]interface{}) error {
 
-	missing := CountParameters(model.ProjectParameters, projectMap)
+	id, missing := CountParameters(model.ProjectParameters, projectMap)
+
+	if !id {
+		projectMap["_id"] = generateUUID()
+	}
 
 	if len(missing) > 0 {
-		return errors.New("missing required parameter(s): " + strings.Join(missing, ", "))
+		return errors.New(strings.Join(missing, ", "))
 	}
 
 	return nil

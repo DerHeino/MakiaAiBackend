@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	c "health/clog"
 	"health/route"
 	"image"
 	"image/jpeg"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -30,7 +30,7 @@ func ConvertRequest(r *http.Request) (map[string]interface{}, error) {
 		return FormToMap(r)
 	}
 
-	return nil, errors.New("Unsupported Content-Type: " + contentType)
+	return nil, errors.New("unsupported Content-Type: " + contentType)
 }
 
 func JsonToMap(r *http.Request) (map[string]interface{}, error) {
@@ -38,7 +38,7 @@ func JsonToMap(r *http.Request) (map[string]interface{}, error) {
 
 	err := json.NewDecoder(r.Body).Decode(&requestMap)
 	if err != nil {
-		log.Println(err.Error())
+		c.ErrorLog.Println(err.Error())
 		return nil, errors.New("JSON formatting error")
 	}
 	return requestMap, nil
@@ -49,8 +49,8 @@ func FormToMap(r *http.Request) (map[string]interface{}, error) {
 
 	err := r.ParseForm()
 	if err != nil {
-		log.Println(err.Error())
-		return nil, errors.New("Form formatting error")
+		c.ErrorLog.Println(err.Error())
+		return nil, errors.New("form formatting error")
 	}
 
 	for k, v := range r.Form {
@@ -65,8 +65,8 @@ func MultiFormToMap(r *http.Request) (map[string]interface{}, error) {
 
 	err := r.ParseMultipartForm(r.ContentLength)
 	if err != nil {
-		log.Println(err.Error())
-		return nil, errors.New("Form formatting error")
+		c.ErrorLog.Println(err.Error())
+		return nil, errors.New("form formatting error")
 	}
 
 	for k, v := range r.Form {
@@ -81,20 +81,20 @@ func MultiFormImage(r *http.Request) (image.Image, error) {
 
 	err := r.ParseMultipartForm(r.ContentLength)
 	if err != nil {
-		log.Println(err.Error())
-		return nil, errors.New("Form formatting error 1")
+		c.ErrorLog.Println(err.Error())
+		return nil, errors.New("form formatting error")
 	}
 
 	file, _, err := r.FormFile("image")
 	if err != nil {
-		log.Println(err.Error())
-		return nil, errors.New("Form formatting error 2")
+		c.ErrorLog.Println(err.Error())
+		return nil, errors.New("form formatting error")
 	}
 
 	// image in memory
 	deviceImage, err := jpeg.Decode(file)
 	if err != nil {
-		log.Println(err.Error())
+		c.ErrorLog.Println(err.Error())
 		return nil, errors.New("failed to decode jpg image")
 	}
 

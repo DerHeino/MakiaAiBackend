@@ -1,6 +1,7 @@
 package main
 
 import (
+	c "health/clog"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,4 +36,39 @@ func openFireKey(key *string) error {
 	*key = string(bytes)
 
 	return nil
+}
+
+func checkLocal() bool {
+
+	if _, err := os.Stat("key/local-logs"); err == nil {
+		return true
+	}
+	return false
+}
+
+// Custom logger
+// Creates or opens a logs.txt file for local testing
+// and uses Stderr in case of deployment.
+func initLogs() {
+	var err error
+	var out *os.File
+
+	if checkLocal() {
+		out, err = os.OpenFile("clog/logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+		if err != nil {
+			out = os.Stderr
+		}
+	} else {
+		out = os.Stderr
+	}
+
+	c.InfoLog = log.New(out, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	c.ErrorLog = log.New(out, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	c.WarningLog = log.New(out, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	c.DebugLog = log.New(out, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	if err != nil {
+		c.ErrorLog.Println(err.Error())
+		c.WarningLog.Println("os.Stderr used for output")
+	}
 }

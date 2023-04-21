@@ -17,7 +17,7 @@ type UserCredentials struct {
 
 var UserParameters = []string{"_id", "name", "telephone", "admin"}
 
-//only needed for user registration (which has low priority in implementation)
+// only needed for user registration (which has low priority in implementation)
 type User struct {
 	Id        string `firestore:"_id" json:"_id" mapstructure:"_id"`
 	Name      string `firestore:"name" json:"name" `

@@ -1,7 +1,8 @@
 package route
 
 import (
-	"log"
+	"fmt"
+	c "health/clog"
 	"reflect"
 	"time"
 
@@ -19,19 +20,28 @@ func generateUUID() string {
 // for required parameters an error should be returned to the client
 //
 // returns an array containing which parameters are missing from the map
-func CountParameters(parameter []string, model map[string]interface{}) []string {
+func CountParameters(parameter []string, model map[string]interface{}) (bool, []string) {
+	var id = true
 	var missing = []string{}
 
 	for _, p := range parameter {
 
 		if val, ok := model[p]; !ok {
-			missing = append(missing, p)
+			if p == "_id" {
+				id = false
+			} else {
+				missing = append(missing, p)
+			}
 		} else if val == reflect.Zero(reflect.TypeOf(val)) {
-			missing = append(missing, p)
+			if p == "_id" {
+				id = false
+			} else {
+				missing = append(missing, p)
+			}
 		}
 	}
 
-	return missing
+	return id, missing
 }
 
 // Returns a pointer containing the time read from value in RFC3339 standard
@@ -40,7 +50,7 @@ func controlTime(value string) time.Time {
 
 	updateTime, err := time.Parse(time.RFC3339, value)
 	if err != nil {
-		log.Println(err.Error(), "controlTime")
+		c.WarningLog.Println(err.Error())
 		return updateTime
 	}
 
@@ -50,6 +60,9 @@ func controlTime(value string) time.Time {
 // Clears entire model struct of previous values.
 // Parameter has to be a pointer otherwise it will panic #
 func clearModel(model interface{}) {
-	value := reflect.ValueOf(model).Elem()
-	value.Set(reflect.Zero(value.Type()))
+	if reflect.ValueOf(model).Kind() == reflect.Struct {
+		value := reflect.ValueOf(model).Elem()
+		value.Set(reflect.Zero(value.Type()))
+		fmt.Printf("clearModel %p\n\t%+v\n", model, model)
+	}
 }

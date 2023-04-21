@@ -50,7 +50,7 @@ func VerifyLogin(userMap map[string]interface{}) (string, error) {
 
 func validateCredentials(userMap map[string]interface{}) error {
 
-	missing := CountParameters(model.CredentialParameters, userMap)
+	_, missing := CountParameters(model.CredentialParameters, userMap)
 
 	if len(missing) > 0 {
 		return errors.New("missing required parameter(s): " + strings.Join(missing, ", "))

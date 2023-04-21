@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	c "health/clog"
 	"health/model"
 	"log"
 	"os"
 	"time"
 
-	"google.golang.org/api/option"
+	mapstructure "github.com/mitchellh/mapstructure"
 
 	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -46,7 +48,7 @@ func Start_firebase() *firestore.Client {
 
 	helloworld, err := client.Collection("_online").Doc("confirmation").Get(ctx)
 	if err != nil {
-		fmt.Println(err)
+		c.ErrorLog.Println(err)
 	}
 
 	confirmation := helloworld.Data()
@@ -58,6 +60,7 @@ func Start_firebase() *firestore.Client {
 	return client
 }
 
+// Check again what this function is for
 func CountDevices() {
 	DeviceList = make(map[string]model.LocalDevice)
 
@@ -73,7 +76,7 @@ func CountDevices() {
 		}
 		id, err := device.DataAt("_id")
 		if err != nil {
-			log.Print(err.Error())
+			c.ErrorLog.Println(err.Error())
 			return
 		}
 		if id, ok := id.(string); ok {
@@ -95,7 +98,7 @@ func GetAdminList() {
 		}
 		u, err := user.DataAt("user")
 		if err != nil {
-			log.Print(err.Error())
+			c.ErrorLog.Println(err.Error())
 			return
 		}
 		if u, ok := u.(map[string]interface{}); ok {
@@ -117,7 +120,7 @@ func GetUser(username string, retrieved *model.UserCredentials) error {
 	userRef := global_client.Collection("users")
 	credentials, err := userRef.Doc("0x" + fmt.Sprintf("%X", username)).Get(global_ctx)
 	if err != nil {
-		log.Println(err.Error())
+		c.ErrorLog.Println(err.Error())
 		return err
 	}
 
@@ -139,7 +142,7 @@ func setUser() {
 
 	_, err := global_client.Collection("users").Doc("0x"+u.User.Id).Set(global_ctx, *u)
 	if err != nil {
-		fmt.Println(err.Error())
+		c.ErrorLog.Println(err.Error())
 	}
 }
 
@@ -147,7 +150,7 @@ func setUser() {
 // all return an array with its supported model.
 //
 // This method retrieves all documents from the specific collection
-// converts them into an array[map] and returns it the JSON encoding of said array
+// converts them into an array[map] and returns the JSON encoding of said array
 func GetAllDocuments(collection string) ([]byte, error) {
 	var array []map[string]interface{}
 
@@ -159,6 +162,7 @@ func GetAllDocuments(collection string) ([]byte, error) {
 			break
 		}
 		if err != nil {
+			c.ErrorLog.Println(err.Error())
 			return nil, err
 		}
 		array = append(array, docs.Data())
@@ -166,6 +170,7 @@ func GetAllDocuments(collection string) ([]byte, error) {
 
 	jsonStr, err := json.Marshal(array)
 	if err != nil {
+		c.ErrorLog.Println(err.Error())
 		return nil, err
 	}
 	return jsonStr, nil
@@ -175,7 +180,7 @@ func SetProjectFire(project *model.Project) bool {
 
 	_, err := global_client.Collection("projects").Doc(project.Id).Set(global_ctx, *project)
 	if err != nil {
-		log.Println(err.Error())
+		c.ErrorLog.Println(err.Error())
 		return false
 	}
 
@@ -186,7 +191,7 @@ func SetLocationFire(location *model.Location) bool {
 
 	_, err := global_client.Collection("locations").Doc(location.Id).Set(global_ctx, *location)
 	if err != nil {
-		log.Println(err.Error())
+		c.ErrorLog.Println(err.Error())
 		return false
 	}
 
@@ -197,7 +202,7 @@ func SetDeviceFire(device *model.Device) error {
 
 	_, lerr := global_client.Collection("locations").Doc(device.LocationId).Get(global_ctx)
 	if lerr != nil {
-		log.Println(lerr.Error())
+		c.ErrorLog.Println(lerr.Error())
 		if status.Code(lerr) == codes.NotFound {
 			return errors.New("location " + device.LocationId + " was not found")
 		}
@@ -206,7 +211,7 @@ func SetDeviceFire(device *model.Device) error {
 
 	_, err := global_client.Collection("devices").Doc(device.Id).Set(global_ctx, *device)
 	if err != nil {
-		log.Println(err.Error())
+		c.ErrorLog.Println(err.Error())
 		return err
 	}
 
@@ -221,7 +226,7 @@ func SetInventoryFire(inventory *model.Inventory) bool {
 
 	_, err := global_client.Collection("inventory").Doc(inventory.Id).Set(global_ctx, *inventory)
 	if err != nil {
-		log.Println(err.Error())
+		c.ErrorLog.Println(err.Error())
 		return false
 	}
 	return true
@@ -239,12 +244,20 @@ func UpdatePingFire(ping *model.Ping) (*model.Ping, error) {
 		},
 	})
 	if err != nil {
-		log.Println(err.Error())
-		return nil, err
+		c.ErrorLog.Println(err.Error())
+		return nil, errors.New("device to update not found")
 	}
 
 	if val, ok := pingSnap.(map[string]interface{}); ok {
+		err := mapstructure.Decode(val, &ping)
+
 		ping.Timestamp = val["timestamp"].(time.Time)
+
+		if err != nil {
+			c.ErrorLog.Println(err)
+			c.WarningLog.Println("current ping returned instead of previous one")
+			return ping, nil
+		}
 	}
 
 	return ping, nil

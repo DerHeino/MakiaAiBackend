@@ -3,9 +3,10 @@ package route
 import (
 	json "encoding/json"
 	"errors"
+	"fmt"
+	c "health/clog"
 	"health/model"
 	"health/network"
-	"log"
 	"strings"
 
 	mapstructure "github.com/mitchellh/mapstructure"
@@ -17,13 +18,13 @@ func PostInventory(inventoryMap map[string]interface{}) (string, error) {
 	defer clearModel(&inventory)
 
 	if err := validateInventory(inventoryMap); err != nil {
-		log.Println(err.Error())
-		return "", err
+		c.ErrorLog.Printf("missing parameters: %s\n", err.Error())
+		return "", fmt.Errorf("failed to upload inventory: missing required parameter(s): %s", err)
 	}
 
 	if err := mapstructure.Decode(inventoryMap, &inventory); err != nil {
-		log.Println(err.Error())
-		return "", errors.New("failed to convert inventory")
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to upload inventory: decoding error")
 	}
 
 	if val, ok := inventoryMap["buyDate"]; ok {
@@ -37,8 +38,8 @@ func PostInventory(inventoryMap map[string]interface{}) (string, error) {
 	if network.SetInventoryFire(&inventory) {
 		jsonStr, err := json.Marshal(&inventory)
 		if err != nil {
-			log.Println(err.Error())
-			return "", errors.New("failed to convert uploaded inventory")
+			c.ErrorLog.Println(err.Error())
+			return "", errors.New("uploaded")
 		}
 		return string(jsonStr), nil
 	} else {
@@ -48,15 +49,14 @@ func PostInventory(inventoryMap map[string]interface{}) (string, error) {
 
 func validateInventory(inventoryMap map[string]interface{}) error {
 
-	missing := CountParameters(model.InventoryParameters, inventoryMap)
+	id, missing := CountParameters(model.InventoryParameters, inventoryMap)
 
-	for _, p := range missing {
-		if p == "_id" {
-			inventoryMap["_id"] = generateUUID()
-		}
-		if p == "name" {
-			return errors.New("missing required parameter: " + strings.Join(missing, ", "))
-		}
+	if !id {
+		inventoryMap["_id"] = generateUUID()
+	}
+
+	if len(missing) > 0 {
+		return errors.New(strings.Join(missing, ", "))
 	}
 
 	return nil

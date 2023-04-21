@@ -122,7 +122,7 @@ func getDevice(w http.ResponseWriter, r *http.Request) {
 
 func postDevice(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println(r.Header)
+	//fmt.Println(r.Header)
 	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
 		fmt.Fprint(w, err.Error())
 		return
@@ -242,7 +242,7 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "upload failed")
 		}
 	} else {
-		fmt.Fprint(w, "Unsupported Content-Type: "+contentType)
+		fmt.Fprint(w, "unsupported Content-Type: ", contentType)
 	}
 }
 
@@ -274,6 +274,7 @@ func handleRequests() {
 }
 
 func main() {
+	initLogs()
 	setConfig()
 
 	// build connection to firestore database
