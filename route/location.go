@@ -1,7 +1,6 @@
 package route
 
 import (
-	json "encoding/json"
 	"errors"
 	"fmt"
 	c "health/clog"
@@ -9,17 +8,17 @@ import (
 	"health/network"
 	"strings"
 
-	mapstructure "github.com/mitchellh/mapstructure"
+	"github.com/mitchellh/mapstructure"
 )
 
-var location model.Location
-
 func PostLocation(locationMap map[string]interface{}) (string, error) {
-	defer clearModel(&location)
+	var address = model.LocationAddress{}
+	var location = model.Location{Address: address}
 
-	if err := validateLocation(locationMap); err != nil {
-		c.ErrorLog.Printf("missing parameters: %s\n", err.Error())
-		return "", fmt.Errorf("failed to upload location: missing required parameter(s): %s", err)
+	if missing := validateLocation(locationMap); len(missing) != 0 {
+		m := strings.Join(missing, ", ")
+		c.ErrorLog.Printf("missing parameters: %s\n", m)
+		return "", fmt.Errorf("failed to upload location: missing required parameter(s): %s", m)
 	}
 
 	if err := mapstructure.Decode(locationMap, &location); err != nil {
@@ -27,39 +26,24 @@ func PostLocation(locationMap map[string]interface{}) (string, error) {
 		return "", errors.New("failed to upload location: decoding error")
 	}
 
-	if network.SetLocationFire(&location) {
-		jsonStr, err := json.Marshal(&location)
-		if err != nil {
-			c.ErrorLog.Println(err.Error())
-			return "", errors.New("uploaded")
-		}
-		return string(jsonStr), nil
-	} else {
-		return "", errors.New("failed to upload location")
+	if location.Id == "" {
+		location.Id = generateUUID()
 	}
+
+	if err := network.SetModelFireWrapper(&location, "location", "project"); err != nil {
+		return "", fmt.Errorf("failed to upload location %s", err.Error())
+	}
+
+	return location.Id, nil
 }
 
-func validateLocation(locationMap map[string]interface{}) error {
+func validateLocation(locationMap map[string]interface{}) []string {
 
-	id, missing := CountParameters(model.LocationParameters, locationMap)
-
-	if add, ok := locationMap["address"].(map[string]interface{}); ok {
-		_, missingAddress := CountParameters(model.AddressParameters, add)
-		if len(missingAddress) > 0 {
-			missing = append(missing, missingAddress...)
-			return errors.New(strings.Join(missing, ", "))
+	missing := validateParameters(model.LocationParameters, locationMap)
+	for _, v := range missing {
+		if v == "address" {
+			return missing
 		}
-	} else {
-		return errors.New(strings.Join(missing, ", "))
 	}
-
-	if !id {
-		locationMap["_id"] = generateUUID()
-	}
-
-	if len(missing) > 0 {
-		return errors.New(strings.Join(missing, ", "))
-	}
-
-	return nil
+	return append(missing, validateParameters(model.AddressParameters, locationMap["address"].(map[string]interface{}))...)
 }

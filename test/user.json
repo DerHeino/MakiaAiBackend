@@ -1,0 +1,22 @@
+{
+	"login_admin": {
+		"username": "h.chan",
+		"password": "makia2106"
+	},
+	"login_user": {
+		"username": "n.user",
+		"password": "non4dmin"
+	},
+	"post_register": {
+		"username": "k.duck",
+		"password": "c16c17c18",
+		"name": "krillin",
+		"telephone": "18"
+	},
+	"login_invalid": {},
+	"post_register_invalid": {
+		"username": "",
+		"password":"",
+		"name": "unknown"
+	}
+}

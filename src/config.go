@@ -2,7 +2,6 @@ package main
 
 import (
 	c "health/clog"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -24,11 +23,19 @@ func setConfig() {
 	if _, ok := os.LookupEnv("PORT"); !ok {
 		os.Setenv("PORT", "10000")
 	}
+
+	if _, ok := os.LookupEnv("LOGIN_KEY"); !ok {
+		os.Setenv("LOGIN_KEY", "21062022")
+	}
+
+	if _, ok := os.LookupEnv("REGISTER_KEY"); !ok {
+		os.Setenv("REGISTER_KEY", "secret_register_key")
+	}
 }
 
 func openFireKey(key *string) error {
 
-	bytes, err := ioutil.ReadFile("key/healthcheck-key.json")
+	bytes, err := os.ReadFile("key/healthcheck-key.json")
 	if err != nil {
 		return err
 	}

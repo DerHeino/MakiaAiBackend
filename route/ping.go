@@ -1,7 +1,7 @@
 package route
 
 import (
-	json "encoding/json"
+	"encoding/json"
 	"errors"
 	"fmt"
 	c "health/clog"
@@ -9,17 +9,20 @@ import (
 	"health/network"
 	"strings"
 
-	mapstructure "github.com/mitchellh/mapstructure"
+	"github.com/mitchellh/mapstructure"
 )
 
-var ping model.Ping
-
 func PostPing(pingMap map[string]interface{}) (string, error) {
-	defer clearModel(&ping)
+	var ping = model.Ping{}
 
-	if err := validatePing(pingMap); err != nil {
-		c.ErrorLog.Printf("missing parameters: %s\n", err.Error())
-		return "", fmt.Errorf("failed to update ping missing parameters: %s", err)
+	if missing := validateParameters(model.PingParameters, pingMap); len(missing) != 0 {
+		m := strings.Join(missing, ", ")
+		c.ErrorLog.Printf("missing parameters: %s\n", m)
+		return "", fmt.Errorf("failed to update ping missing parameters: %s", m)
+	}
+
+	if err := validatePingStatus(pingMap["status"].(string)); err != nil {
+		return "", err
 	}
 
 	if err := mapstructure.Decode(pingMap, &ping); err != nil {
@@ -28,7 +31,7 @@ func PostPing(pingMap map[string]interface{}) (string, error) {
 	}
 
 	if val, ok := pingMap["timestamp"]; ok {
-		ping.Timestamp = controlTime(val.(string))
+		ping.Timestamp = decodeTime(val.(string))
 	}
 
 	if val, err := network.UpdatePingFire(&ping); err == nil {
@@ -44,22 +47,7 @@ func PostPing(pingMap map[string]interface{}) (string, error) {
 	}
 }
 
-func validatePing(pingMap map[string]interface{}) error {
-
-	_, missing := CountParameters(model.PingParameters, pingMap)
-
-	if len(missing) > 0 {
-		return errors.New(strings.Join(missing, ", "))
-	}
-
-	if status, ok := pingMap["status"].(string); ok {
-		return validateStatus(status)
-	}
-
-	return nil
-}
-
-func validateStatus(status string) error {
+func validatePingStatus(status string) error {
 
 	for _, s := range model.DeviceStatus {
 		if status == s {

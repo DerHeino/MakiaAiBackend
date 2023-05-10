@@ -4,21 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	c "health/clog"
-	"health/route"
 	"image"
 	"image/jpeg"
 	"net/http"
 	"regexp"
-	"strings"
 )
-
-// This file contains functions for converting http.Requests into a format
-// for further processing, or auth validation
 
 // Converts supported content types of HTTP request into a map for further processing
 // Only required for POST requests
 //
-// returns a map with information and empty error if successful
+// returns a map with data and empty error if successful
 func ConvertRequest(r *http.Request) (map[string]interface{}, error) {
 
 	contentType := r.Header.Get("Content-Type")
@@ -34,7 +29,7 @@ func ConvertRequest(r *http.Request) (map[string]interface{}, error) {
 }
 
 func JsonToMap(r *http.Request) (map[string]interface{}, error) {
-	requestMap := make(map[string]interface{})
+	requestMap := make(map[string]interface{}, 20)
 
 	err := json.NewDecoder(r.Body).Decode(&requestMap)
 	if err != nil {
@@ -45,7 +40,7 @@ func JsonToMap(r *http.Request) (map[string]interface{}, error) {
 }
 
 func FormToMap(r *http.Request) (map[string]interface{}, error) {
-	requestMap := make(map[string]interface{})
+	requestMap := make(map[string]interface{}, 20)
 
 	err := r.ParseForm()
 	if err != nil {
@@ -61,7 +56,7 @@ func FormToMap(r *http.Request) (map[string]interface{}, error) {
 }
 
 func MultiFormToMap(r *http.Request) (map[string]interface{}, error) {
-	requestMap := make(map[string]interface{})
+	requestMap := make(map[string]interface{}, 20)
 
 	err := r.ParseMultipartForm(r.ContentLength)
 	if err != nil {
@@ -76,7 +71,7 @@ func MultiFormToMap(r *http.Request) (map[string]interface{}, error) {
 	return requestMap, nil
 }
 
-// For image processing
+// Image uploads support only one content type as well as only one image format (jpeg)
 func MultiFormImage(r *http.Request) (image.Image, error) {
 
 	err := r.ParseMultipartForm(r.ContentLength)
@@ -98,40 +93,5 @@ func MultiFormImage(r *http.Request) (image.Image, error) {
 		return nil, errors.New("failed to decode jpg image")
 	}
 
-	// Testing creates and writes into root of module
-	//f, _ := os.Create("testX.jpg")
-	//defer f.Close()
-	//if err = jpeg.Encode(f, deviceImage, nil); err != nil {
-	//	log.Printf("failed to encode: %v", err)
-	//}
-
-	//fmt.Println(reflect.TypeOf(h), reflect.TypeOf(file))
 	return deviceImage, nil
-}
-
-// Takes "Authorization" string from the HTTP header and
-// evaluates its parsing ("Bearer" <Token>)
-// Takes into account if admin rights are required for POST /project and /location
-// calls ValidateToken from route/user.go
-//
-// returns a string and an error for ResponseWriter and error logging
-// if the token is invalid in any way
-// returns an empty string and error if token is valid
-func ValidateTokenForm(token string, admin bool) error {
-
-	parts := strings.Split(token, "Bearer")
-	if len(parts) != 2 {
-		return errors.New("no Token found")
-	} else {
-		tokenString := strings.TrimSpace(parts[1])
-		//fmt.Println(token)
-
-		if ok, err := route.ValidateToken(tokenString, admin); ok {
-			return nil
-		} else if err == nil {
-			return errors.New("access denied, admin rights required")
-		} else {
-			return errors.New("access denied, Token invalid: " + tokenString)
-		}
-	}
 }

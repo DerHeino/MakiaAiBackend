@@ -1,0 +1,157 @@
+{
+	"project": [{
+		"_return":"equal",
+		"_id":"42df27c3-21e9-4ac8-83b3-24a8176dd825",
+		"name":"meat"	
+	}, {
+		"_return":"UUID",
+		"_id":"",
+		"name":"fish"
+	}, {
+		"_return":"equal",
+		"_id":"z-unknown-id-p",
+		"name":"unknown project"
+	}],
+	"location": [{
+		"_return":"equal",
+		"_id":"dbad2e35-2151-46e0-9773-78a36784973f",
+		"name":"Universität Salzburg",
+		"projectId":"42df27c3-21e9-4ac8-83b3-24a8176dd825",
+		"address": {
+			"street":"Jakob-Haringer-Straße",
+			"zipcode":"5020",
+			"city":"Salzburg",
+			"country":"Austria"
+		}
+	}, {
+		"_return":"equal",
+		"_id":"58a5ec1e-c5bf-4463-9c55-e4735bbf8422",
+		"name":"HBF Salzburg",
+		"address": {
+			"street":"Südtiroler Platz",
+			"zipcode":"5020",
+			"city":"Salzburg",
+			"country":"Austria"
+		}
+	}, {
+		"_return":"equal",
+		"_id":"cf46a3c1-1ccb-45c6-bd0b-321271c69b87",
+		"name":"Autobahn Salzburg",
+		"address": {
+			"street":"A1 Westautobahn",
+			"zipcode":"5020",
+			"city":"Salzburg",
+			"country":"Austria"
+		}
+	}, {
+		"_return":"equal",
+		"_id":"z-unknown-id-l",
+		"name":"unknown location",
+		"address": {
+			"street":"unknown street",
+			"zipcode":"0",
+			"city":"unknown city",
+			"country":"unknown country"
+		}
+	}],
+	"device": [{
+		"_return":"equal",
+		"_id":"40bc042c-af0d-46b0-92e1-cbdfb8248ad9",
+		"locationId":"dbad2e35-2151-46e0-9773-78a36784973f",
+		"name":"Local Camera",
+		"serial":307506485,
+		"lastPing":{
+			"id":"40bc042c-af0d-46b0-92e1-cbdfb8248ad9",
+			"status":"ONLINE",
+			"timestamp":"$isoTimestamp",
+			"version":"python_2023"
+		}
+	},{
+		"_return":"equal",
+		"_id":"6ae1cbac-d3a9-42f4-9dbc-f23acc8cc364",
+		"locationId":"58a5ec1e-c5bf-4463-9c55-e4735bbf8422",
+		"name":"HBF Public Camera"
+	},{
+		"_return":"equal",
+		"_id":"38039691-e43b-4918-929d-03a7dc558e71",
+		"locationId":"58a5ec1e-c5bf-4463-9c55-e4735bbf8422",
+		"name":"Arduino"
+	},{
+		"_return":"equal",
+		"_id":"9eb5c5dd-21a7-4020-8c67-a24eaea16790",
+		"locationId":"58a5ec1e-c5bf-4463-9c55-e4735bbf8422",
+		"name":"Rasperry Pi 3",
+		"serial":428794513
+	},{
+		"_return":"equal",
+		"_id":"ce0c8bee-9844-4ff8-a842-6d506e8f2b65",
+		"locationId":"cf46a3c1-1ccb-45c6-bd0b-321271c69b87",
+		"name":"Geschwindigkeitsmesser"
+	},{
+		"_return":"equal",
+		"_id":"z-unknown-id-d",
+		"locationId":"z-unknown-id-l",
+		"name":"Hidden Device"
+	}],
+	"ping": [{
+		"_return":"contains",
+		"id":"40bc042c-af0d-46b0-92e1-cbdfb8248ad9",
+		"status":"OFFLINE",
+		"timestamp":"$isoTimestamp",
+		"version":"python_2023_update"
+	},{
+		"_return":"contains",
+		"id":"9eb5c5dd-21a7-4020-8c67-a24eaea16790",
+		"status":"OFFLINE",
+		"timestamp":"$timestamp",
+		"version":"python_2023_update"
+	},{
+		"_return":"contains",
+		"id":"9eb5c5dd-21a7-4020-8c67-a24eaea16790",
+		"status":"ONLINE",
+		"timestamp":"$isoTimestamp",
+		"version":"python_2023_update2"
+	}],
+	"inventory": [{
+		"_return":"equal",
+		"_id":"68a16697-1baf-47a4-b6ef-fb784f254d9b",
+		"name":"Camera Extension",
+		"deviceId":"40bc042c-af0d-46b0-92e1-cbdfb8248ad9"
+	},{
+		"_return":"equal",
+		"_id":"923d33eb-0c83-4990-87a5-c1ed99b2ae8f",
+		"name":"Rasperry Pi 3 Gehäuse",
+		"deviceId":"9eb5c5dd-21a7-4020-8c67-a24eaea16790",
+		"buyDate":"$isoTimestamp",
+		"montageDate":"$timestamp"
+	},{
+		"_return":"equal",
+		"_id":"4761447a-c7fb-45d5-8fa4-664b110bfc01",
+		"name":"Rasperry Pi 3 Zusatz 1",
+		"deviceId":"9eb5c5dd-21a7-4020-8c67-a24eaea16790"
+	},{
+		"_return":"equal",
+		"_id":"dd5891ae-c966-42be-97ee-811fca8f90ac",
+		"name":"Rasperry Pi 3 Zusatz 2",
+		"deviceId":"9eb5c5dd-21a7-4020-8c67-a24eaea16790"
+	},{
+		"_return":"equal",
+		"_id":"ef640bfb-d305-77A7-8a9a-14364ebe31e8",
+		"name":"Arduino Gehäuse",
+		"deviceId":"38039691-e43b-4918-929d-03a7dc558e71",
+		"montageDate":"$timestamp"
+	},{
+		"_return":"equal",
+		"_id":"dd5891ae-c966-42be-97ee-811fca8f90ac",
+		"name":"Kamerastativ"
+	},{
+		"_return":"equal",
+		"_id":"80dfe13e-c62b-49fc-b784-62381ad628a9",
+		"name":"Altes Gerät",
+		"notest":"Hi Mom"
+	}, {
+		"_return":"equal",
+		"_id":"z-unknown-id-i",
+		"name":"secret Case"
+	}]
+}
