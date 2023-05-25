@@ -1,63 +1,45 @@
 package route
 
 import (
-	json "encoding/json"
 	"errors"
+	"fmt"
+	c "health/clog"
 	"health/model"
 	"health/network"
-	"log"
 	"strings"
 
-	mapstructure "github.com/mitchellh/mapstructure"
+	"github.com/mitchellh/mapstructure"
 )
 
-var inventory model.Inventory
-
 func PostInventory(inventoryMap map[string]interface{}) (string, error) {
-	defer clearModel(&inventory)
+	var inventory = model.Inventory{}
 
-	if err := validateInventory(inventoryMap); err != nil {
-		log.Println(err.Error())
-		return "", err
+	if missing := validateParameters(model.InventoryParameters, inventoryMap); len(missing) != 0 {
+		m := strings.Join(missing, ", ")
+		c.ErrorLog.Printf("missing parameters: %s\n", m)
+		return "", fmt.Errorf("failed to upload inventory: missing required parameter(s): %s", m)
 	}
 
 	if err := mapstructure.Decode(inventoryMap, &inventory); err != nil {
-		log.Println(err.Error())
-		return "", errors.New("failed to convert inventory")
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to upload inventory: decoding error")
+	}
+
+	if inventory.Id == "" {
+		inventory.Id = generateUUID()
 	}
 
 	if val, ok := inventoryMap["buyDate"]; ok {
-		inventory.BuyDate = controlTime(val.(string))
+		inventory.BuyDate = decodeTime(val.(string))
 	}
 
 	if val, ok := inventoryMap["montageDate"]; ok {
-		inventory.MontageDate = controlTime(val.(string))
+		inventory.MontageDate = decodeTime(val.(string))
 	}
 
-	if network.SetInventoryFire(&inventory) {
-		jsonStr, err := json.Marshal(&inventory)
-		if err != nil {
-			log.Println(err.Error())
-			return "", errors.New("failed to convert uploaded inventory")
-		}
-		return string(jsonStr), nil
-	} else {
-		return "", errors.New("failed to upload inventory")
-	}
-}
-
-func validateInventory(inventoryMap map[string]interface{}) error {
-
-	missing := CountParameters(model.InventoryParameters, inventoryMap)
-
-	for _, p := range missing {
-		if p == "_id" {
-			inventoryMap["_id"] = generateUUID()
-		}
-		if p == "name" {
-			return errors.New("missing required parameter: " + strings.Join(missing, ", "))
-		}
+	if err := network.SetModelFireWrapper(&inventory, "inventory", "device"); err != nil {
+		return "", fmt.Errorf("failed to upload inventory: %s", err.Error())
 	}
 
-	return nil
+	return inventory.Id, nil
 }

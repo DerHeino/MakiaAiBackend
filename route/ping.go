@@ -1,72 +1,58 @@
 package route
 
 import (
-	json "encoding/json"
+	"encoding/json"
 	"errors"
 	"fmt"
+	c "health/clog"
 	"health/model"
 	"health/network"
-	"log"
 	"strings"
 
-	mapstructure "github.com/mitchellh/mapstructure"
+	"github.com/mitchellh/mapstructure"
 )
 
-var ping model.Ping
-
 func PostPing(pingMap map[string]interface{}) (string, error) {
-	defer clearModel(&ping)
+	var ping = model.Ping{}
 
-	if err := validatePing(pingMap); err != nil {
-		log.Printf("missing parameters: %s\n", err.Error())
-		return "", fmt.Errorf("missing parameters: %s", err)
+	if missing := validateParameters(model.PingParameters, pingMap); len(missing) != 0 {
+		m := strings.Join(missing, ", ")
+		c.ErrorLog.Printf("missing parameters: %s\n", m)
+		return "", fmt.Errorf("failed to update ping missing parameters: %s", m)
 	}
 
-	if err := mapstructure.Decode(pingMap, &ping); err != nil {
-		log.Println(err.Error())
+	if err := validatePingStatus(pingMap["status"].(string)); err != nil {
 		return "", err
 	}
 
+	if err := mapstructure.Decode(pingMap, &ping); err != nil {
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to update ping: decoding error")
+	}
+
 	if val, ok := pingMap["timestamp"]; ok {
-		ping.Timestamp = controlTime(val.(string))
+		ping.Timestamp = decodeTime(val.(string))
 	}
 
 	if val, err := network.UpdatePingFire(&ping); err == nil {
 		jsonStr, err := json.Marshal(&val)
 		if err != nil {
-			log.Println(err.Error())
-			return "", errors.New("failed to convert uploaded device")
+			c.ErrorLog.Println(err.Error())
+			return "", errors.New("return error")
 		}
 		return string(jsonStr), nil
 	} else {
-		log.Println(err.Error())
-		return "", errors.New("failed to update Ping\nreason: " + err.Error())
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to update ping: " + err.Error())
 	}
 }
 
-func validatePing(pingMap map[string]interface{}) error {
-
-	missing := CountParameters(model.PingParameters, pingMap)
-
-	if len(missing) > 0 {
-		return errors.New(strings.Join(missing, ", "))
-	}
-
-	if status, ok := pingMap["status"].(string); ok {
-		if err := validateStatus(status); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func validateStatus(status string) error {
+func validatePingStatus(status string) error {
 
 	for _, s := range model.DeviceStatus {
 		if status == s {
 			return nil
 		}
 	}
-	return errors.New("invalid status")
+	return errors.New("invalid DeviceStatus")
 }

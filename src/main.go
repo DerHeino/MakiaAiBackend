@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	bg "health/background"
 	"health/network"
 	"health/route"
 	"image/jpeg"
@@ -23,27 +24,62 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	mapRequest, err := ConvertRequest(r)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
 	tokenString, err := route.VerifyLogin(mapRequest)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+	fmt.Fprint(w, tokenString)
+}
+
+func getRegisterKey(w http.ResponseWriter, r *http.Request) {
+	username, err := route.ValidateToken(r.Header.Get("Authorization"), true)
+	if err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	if key, err := route.BuildRegisterKey(username); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+	} else {
+		fmt.Fprint(w, key)
+	}
+}
+
+func postRegister(w http.ResponseWriter, r *http.Request) {
+	inviter, err := route.ValidateToken(r.Header.Get("Authorization"), true, os.Getenv("REGISTER_KEY"))
+	if err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	mapRequest, err := ConvertRequest(r)
+	if err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	tokenString, err := route.VerifyUser(inviter, mapRequest)
+	if err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 	fmt.Fprint(w, tokenString)
 }
 
 func getProject(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	projectsJson, err := network.GetAllDocuments("projects")
+	projectsJson, err := network.GetAllDocuments("project")
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
@@ -51,152 +87,154 @@ func getProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func postProject(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), true); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), true); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
 	mapRequest, err := ConvertRequest(r)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	confirmation, err := route.PostProject(mapRequest)
+	projectId, err := route.PostProject(mapRequest)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
-	fmt.Fprintf(w, "project %s", confirmation)
+	fmt.Fprintf(w, "%s", projectId)
 }
 
 func getLocation(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	projectsJson, err := network.GetAllDocuments("locations")
+	locationJson, err := network.GetAllDocuments("location")
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	fmt.Fprint(w, string(projectsJson))
+	fmt.Fprint(w, string(locationJson))
 }
 
 func postLocation(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), true); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), true); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
 	mapRequest, err := ConvertRequest(r)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	confirmation, err := route.PostLocation(mapRequest)
+	locId, err := route.PostLocation(mapRequest)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
-	fmt.Fprintf(w, "location %s", confirmation)
+	fmt.Fprintf(w, "%s", locId)
 }
 
 func getDevice(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	projectsJson, err := network.GetAllDocuments("devices")
+	deviceJson, err := network.GetAllDocuments("device")
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	fmt.Fprint(w, string(projectsJson))
+	fmt.Fprint(w, string(deviceJson))
 }
 
 func postDevice(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Println(r.Header)
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
 	mapRequest, err := ConvertRequest(r)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	confirmation, err := route.PostDevice(mapRequest)
+	devId, err := route.PostDevice(mapRequest)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		if devId != "" {
+			fmt.Fprint(w, devId, "\nerror: ", err.Error())
+		} else {
+			fmt.Fprint(w, "error: ", err.Error())
+		}
 		return
 	}
 
-	fmt.Fprintf(w, "device %s", confirmation)
+	fmt.Fprintf(w, "%s", devId)
 }
 
 func getInventory(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	projectsJson, err := network.GetAllDocuments("inventory")
+	inventoryJson, err := network.GetAllDocuments("inventory")
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	fmt.Fprint(w, string(projectsJson))
+	fmt.Fprint(w, string(inventoryJson))
 }
 
 func postInventory(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
 	mapRequest, err := ConvertRequest(r)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	confirmation, err := route.PostInventory(mapRequest)
+	invId, err := route.PostInventory(mapRequest)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
-	fmt.Fprintf(w, "inventory %s", confirmation)
+	fmt.Fprintf(w, "%s", invId)
 }
 
 func postPing(w http.ResponseWriter, r *http.Request) {
 
 	pingRequest, err := ConvertRequest(r)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	confirmation, err := route.PostPing(pingRequest)
+	lastPing, err := route.PostPing(pingRequest)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
-	fmt.Fprint(w, confirmation)
+	fmt.Fprint(w, lastPing)
 }
 
 func getImage(w http.ResponseWriter, r *http.Request) {
-	if err := ValidateTokenForm(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, err.Error())
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
@@ -206,7 +244,7 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 
 	image := route.GetImage(deviceId)
 	if image == nil {
-		fmt.Fprintf(w, "no image found under device %s", deviceId)
+		fmt.Fprintf(w, "error: no image found under device %s", deviceId)
 		return
 	}
 
@@ -216,7 +254,7 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 	buf := new(bytes.Buffer)
 	err := jpeg.Encode(buf, *image, nil)
 	if err != nil {
-		fmt.Fprintf(w, "error displaying image")
+		fmt.Fprintf(w, "error: displaying image")
 		return
 	}
 
@@ -233,16 +271,16 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 	if match, _ := regexp.MatchString("multipart/form-data", contentType); match {
 		myImage, err := MultiFormImage(r)
 		if err != nil {
-			fmt.Fprint(w, err.Error())
+			fmt.Fprint(w, "error: ", err.Error())
 			return
 		}
 		if route.PostImage(deviceId, &myImage) {
 			fmt.Fprintf(w, "image -> %s", deviceId)
 		} else {
-			fmt.Fprintf(w, "upload failed")
+			fmt.Fprintf(w, "error: upload failed")
 		}
 	} else {
-		fmt.Fprint(w, "Unsupported Content-Type: "+contentType)
+		fmt.Fprint(w, "error: unsupported Content-Type: ", contentType)
 	}
 }
 
@@ -252,6 +290,8 @@ func handleRequests() {
 	r.Get("/", homePage)
 
 	r.Post("/login", login)
+	r.Get("/register", getRegisterKey)
+	r.Post("/register", postRegister)
 
 	r.Get("/project", getProject)
 	r.Post("/project", postProject)
@@ -274,13 +314,16 @@ func handleRequests() {
 }
 
 func main() {
+	initLogs()
 	setConfig()
 
 	// build connection to firestore database
-	client := network.Start_firebase()
+	network.Start_firebase()
+
+	// register map (removes entries after expiry)
+	bg.RunRegMap()
+	// image map
+	bg.RunDevMap()
 
 	handleRequests()
-
-	//_ = client
-	defer client.Close()
 }

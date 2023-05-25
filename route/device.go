@@ -1,69 +1,58 @@
 package route
 
 import (
-	json "encoding/json"
 	"errors"
 	"fmt"
+	bg "health/background"
+	c "health/clog"
 	"health/model"
 	"health/network"
-	"log"
+	"image"
 	"strings"
 
-	mapstructure "github.com/mitchellh/mapstructure"
+	"github.com/mitchellh/mapstructure"
 )
 
-var device model.Device
-
 func PostDevice(deviceMap map[string]interface{}) (string, error) {
-	defer clearModel(&device)
+	var device = model.Device{}
 
-	if err := validateDevice(deviceMap); err != nil {
-		log.Printf("missing parameters: %s", err.Error())
-		return "", fmt.Errorf("missing required parameter(s): %s", err)
+	if missing := validateParameters(model.DeviceParameters, deviceMap); len(missing) != 0 {
+		m := strings.Join(missing, ", ")
+		c.ErrorLog.Printf("missing parameters: %s\n", m)
+		return "", fmt.Errorf("failed to upload device: missing required parameter(s): %s", m)
 	}
 
 	if err := mapstructure.Decode(deviceMap, &device); err != nil {
-		log.Println(err.Error())
-		return "", errors.New("failed to convert device")
+		c.ErrorLog.Println(err.Error())
+		return "", errors.New("failed to upload device: decoding error")
 	}
 
-	if val, ok := deviceMap["lastPing"].(map[string]interface{}); ok {
-		device.LastPing.Timestamp = controlTime(val["timestamp"].(string))
+	if device.Id == "" {
+		device.Id = generateUUID()
 	}
 
-	if err := network.SetDeviceFire(&device); err == nil {
-		jsonStr, err := json.Marshal(&device)
-		if err != nil {
-			log.Println(err.Error())
-			return "", errors.New("failed to convert uploaded device")
+	if err := network.SetModelFireWrapper(&device, "device", "location"); err == nil {
+		if _, ok := deviceMap["lastPing"].(map[string]interface{}); ok {
+			_, err := PostPing(deviceMap["lastPing"].(map[string]interface{}))
+			if err != nil {
+				return device.Id, err
+			}
+			return device.Id, nil
+		} else {
+			return device.Id, nil
 		}
-		return string(jsonStr), nil
+
 	} else {
-		log.Println(err.Error())
-		return "", errors.New("failed to upload device\nreason: " + err.Error())
+		return "", fmt.Errorf("failed to upload device: %s", err.Error())
 	}
 }
 
-func validateDevice(deviceMap map[string]interface{}) error {
+func PostImage(deviceId string, image *image.Image) bool {
+	devMap := bg.GetDeviceMap()
+	return devMap.Add(deviceId, image)
+}
 
-	missing := CountParameters(model.DeviceParameters, deviceMap)
-
-	if ping, ok := deviceMap["lastPing"].(map[string]interface{}); ok {
-
-		if err := validatePing(ping); err != nil {
-			missing = append(missing, err.Error())
-			return errors.New(strings.Join(missing, ", "))
-		}
-	}
-
-	for _, p := range missing {
-		if p == "_id" {
-			deviceMap["_id"] = generateUUID()
-		}
-		if p == "name" || p == "locationId" {
-			return errors.New(strings.Join(missing, ", "))
-		}
-	}
-
-	return nil
+func GetImage(deviceId string) *image.Image {
+	devMap := bg.GetDeviceMap()
+	return devMap.Get(deviceId)
 }

@@ -1,0 +1,38 @@
+{
+	"project": [{}, 
+	{
+		"name":1234
+	}],
+	"location": [{}, 
+	{
+		"name":"invalid"
+	}],
+	"device": [{}, 
+	{	
+		"locationId":"z-unknown-id-l",
+		"name":"invalid",
+		"serial":"number"
+	}, {
+		"_id":"z-unknown-id-d",
+		"locationId":"z-unknown-id-l",
+		"name":"Hidden Device, invalid ping",
+		"lastPing": {
+			"status":"Not ONLINE"
+		}
+	}],
+	"ping": [{}, 
+	{
+		"id":"invalid_id",
+		"status":"WARNING",
+		"timestamp":"$timestamp",
+		"version":"python_2023_update"
+	}],
+	"inventory": [{}, 
+	{
+		"name":"invalid",
+		"notes":1234
+	},{
+		"name":"Kamerastativ",
+		"deviceId":"cf46a3c1-1ccb-45c6-bd0b-321271c69b87"
+	}]
+}
