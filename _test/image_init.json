@@ -1,0 +1,33 @@
+{
+	"user": {
+		"username": "h.chan",
+		"password": "makia2106"
+	},
+	"project" : {
+		"_id" : "c4db6438-fad311edbe56hd",
+		"name" :"images"
+	},
+	"location": {
+		"_id":"756e6973-616c7a62757267",
+		"name":"Universität Salzburg",
+		"projectId":"c4db6438-fad311edbe56hd",
+		"address": {
+			"street":"Jakob-Haringer-Straße",
+			"zipcode":"5020",
+			"city":"Salzburg",
+			"country":"Austria"
+		}
+	},
+	"device": {
+		"_id":"76697274-75656c6c654b",
+		"locationId":"756e6973-616c7a62757267",
+		"name":"virtuelle Kamera",
+		"serial":20060123,
+		"lastPing":{
+			"id":"76697274-75656c6c654b",
+			"status":"ONLINE",
+			"timestamp":"$isoTimestamp",
+			"version":"img_python_2023"
+		}
+	}
+}

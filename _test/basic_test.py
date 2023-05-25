@@ -249,6 +249,14 @@ def post_invalid():
 
 def delete():
 	pass
+	# inventory: dd5891ae-c966-42be-97ee-811fca8f90ac
+	# device: ce0c8bee-9844-4ff8-a842-6d506e8f2b65
+	# location: cf46a3c1-1ccb-45c6-bd0b-321271c69b87 (not nested after del ce0c8bee)
+	# project: id: fish (get id from get all)
+
+	# device: 9eb5c5dd-21a7-4020-8c67-a24eaea16790 (nested)
+	# location: 58a5ec1e-c5bf-4463-9c55-e4735bbf8422 (nested)
+	# project: 42df27c3-21e9-4ac8-83b3-24a8176dd825 (nested)
 
 
 def make_request(func: Callable, route: str, token: str = None, jsonObj: 'dict' = None, data: 'str' = None) -> requests.Response:
