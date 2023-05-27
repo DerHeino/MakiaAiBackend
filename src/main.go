@@ -206,10 +206,10 @@ func postPing(w http.ResponseWriter, r *http.Request) {
 }
 
 func getImage(w http.ResponseWriter, r *http.Request) {
-	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+	/*if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
 		fmt.Fprint(w, "error: ", err.Error())
 		return
-	}
+	}*/
 
 	deviceId := chi.URLParam(r, "deviceId")
 
