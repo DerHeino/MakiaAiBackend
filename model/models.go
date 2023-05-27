@@ -76,11 +76,12 @@ type LocationAddress struct {
 var DeviceParameters = []string{"locationId", "name"}
 
 type Device struct {
-	Id         string `firestore:"_id" json:"_id" mapstructure:"_id,omitempty"`
-	LocationId string `firestore:"locationId" json:"locationId" mapstructure:"locationId"`
-	Name       string `firestore:"name" json:"name" mapstructure:"name"`
-	Serial     *int   `firestore:"serial,omitempty" json:"serial,omitempty" mapstructure:"serial,omitempty"`
-	LastPing   *Ping  `firestore:"lastPing,omitempty" json:"lastPing,omitempty" mapstructure:"lastPing,omitempty"`
+	Id         string  `firestore:"_id" json:"_id" mapstructure:"_id,omitempty"`
+	LocationId string  `firestore:"locationId" json:"locationId" mapstructure:"locationId"`
+	Name       string  `firestore:"name" json:"name" mapstructure:"name"`
+	Serial     *int    `firestore:"serial,omitempty" json:"serial,omitempty" mapstructure:"serial,omitempty"`
+	Status     *string `firestore:"status,omitempty" json:"status,omitempty" mapstructure:"status,omitempty"`
+	LastPing   *Ping   `firestore:"lastPing,omitempty" json:"lastPing,omitempty" mapstructure:"-"`
 }
 
 func (d *Device) ID() string {

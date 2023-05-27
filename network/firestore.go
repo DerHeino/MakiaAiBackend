@@ -248,7 +248,14 @@ func UpdatePingFire(ping *model.Ping) (*model.Ping, error) {
 			Value: ping,
 		},
 	})
-	if err != nil {
+	if err == nil {
+		global_client.Collection("device").Doc(ping.Id).Update(global_ctx, []firestore.Update{
+			{
+				Path:  "status",
+				Value: ping.Status,
+			},
+		})
+	} else {
 		c.ErrorLog.Println(err.Error())
 		return nil, errors.New("device to update not found")
 	}

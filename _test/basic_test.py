@@ -1,4 +1,5 @@
 import base64
+import brotli
 import datetime
 import requests
 import os
@@ -12,7 +13,8 @@ os.system('color')
 # header auth after login
 # supports json data
 
-DOMAIN = None
+#DOMAIN = "http://localhost:10000"
+DOMAIN = "https://healthapi-u6xn.onrender.com"
 
 # default header contains User-Agent, Accept-Encoding, Accept, Connection
 # I'm adding my own User-Agent and Accept-Encoding
@@ -79,7 +81,11 @@ def contains(response: str, expected: str) -> bool:
 
 
 def check_response(test: str, content: bytes, expected: str, method: Callable = equal) -> bool:
-	response = content.decode('utf8')
+	try:
+		response = content.decode('utf-8')
+	except UnicodeDecodeError:
+		content = brotli.decompress(content)
+		response = content.decode('utf-8')
 
 	if method(response, expected):
 		if test: print(f'[ \x1b[0;32;40m{SUCCESS}\x1b[0m ]\t{test}')
@@ -325,10 +331,8 @@ def open_files():
 
 
 def main():
-	global DOMAIN
 
 	os.chdir(os.path.dirname(os.path.realpath(__file__)))
-	DOMAIN = "http://localhost:10000"
 
 	open_files()
 	if login():
@@ -339,4 +343,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+	main()

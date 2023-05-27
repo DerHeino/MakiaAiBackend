@@ -33,6 +33,10 @@ func PostDevice(deviceMap map[string]interface{}) (string, error) {
 		device.Id = generateUUID()
 	}
 
+	if device.Status == nil {
+		*device.Status = "OFFLINE"
+	}
+
 	if err := network.SetModelFireWrapper(&device, "device", "location"); err == nil {
 		devMap := bg.GetDeviceMap()
 
