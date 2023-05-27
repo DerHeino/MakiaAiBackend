@@ -1,12 +1,14 @@
 package route
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	c "health/clog"
 	"health/model"
 	"health/network"
 	"strings"
+	"sync"
 
 	"github.com/mitchellh/mapstructure"
 )
@@ -34,4 +36,33 @@ func PostProject(projectMap map[string]interface{}) (string, error) {
 	} else {
 		return "", errors.New("failed to upload project")
 	}
+}
+
+func DeleteProject(projectId string, out *[]byte) error {
+
+	doc, err := network.GetSingleDocument("project", projectId)
+	if err != nil {
+		return err
+	}
+
+	jsonBytes, err := network.GetAllDocuments("location")
+	if err != nil {
+		return err
+	}
+
+	var location []model.Location
+	_ = json.Unmarshal(jsonBytes, &location)
+
+	wg := sync.WaitGroup{}
+	for _, loc := range location {
+
+		if loc.FID() == projectId {
+			wg.Add(1)
+			go DeleteLocation(loc.ID(), nil, &wg)
+		}
+	}
+	wg.Wait()
+
+	*out, _ = json.Marshal(doc)
+	return network.DeleteFire("project", projectId)
 }

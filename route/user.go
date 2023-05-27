@@ -112,6 +112,11 @@ func ValidateToken(auth string, admin bool, secret ...string) (string, error) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		id := hashUsername(claims["username"].(string))
+		if len(secret) > 0 {
+			if !bg.GetRegMap().Exists(id) {
+				return "", fmt.Errorf("token expired: %s", tokenString)
+			}
+		}
 		return claims["username"].(string), network.UserValid(id, admin)
 	}
 

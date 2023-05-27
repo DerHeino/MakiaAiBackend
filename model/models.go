@@ -119,7 +119,7 @@ var InventoryParameters = []string{"name"}
 type Inventory struct {
 	Id          string    `firestore:"_id" json:"_id" mapstructure:"_id,omitempty"`
 	Name        string    `firestore:"name" json:"name" mapstructure:"name"`
-	DeviceId    *string   `firestore:"deviceId,omitempty" json:"locationId" mapstructure:"deviceId"`
+	DeviceId    *string   `firestore:"deviceId,omitempty" json:"deviceId" mapstructure:"deviceId"`
 	Notes       *string   `firestore:"notes,omitempty" json:"notes,omitempty" mapstructure:"notes,omitempty"`
 	BuyDate     time.Time `firestore:"buyDate,omitempty" json:"buyDate" mapstructure:"-"`
 	MontageDate time.Time `firestore:"montageDate,omitempty" json:"montageDate" mapstructure:"-"`

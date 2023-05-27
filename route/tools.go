@@ -4,6 +4,7 @@ import (
 	c "health/clog"
 	"reflect"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,5 +40,11 @@ func decodeTime(input string) time.Time {
 	} else {
 		c.WarningLog.Println(err.Error())
 		return time.Time{}
+	}
+}
+
+func removeWaitGroup(wg *sync.WaitGroup) {
+	if wg != nil {
+		wg.Done()
 	}
 }

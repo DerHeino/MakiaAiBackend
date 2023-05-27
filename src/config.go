@@ -4,38 +4,65 @@ import (
 	c "health/clog"
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
-// this file exists mainly to support both local and remote deployment
-// since heroku does not support specific files
+var dirs = [3]string{"_key/", "etc/secrets/", ""}
+
+// sets environment variables
+// tries to read from different locations first
+// if it fails, it will set its own environment variables
+// note that the program will exit if no GOOGLE_APPLICATION_CREDENTIALS is set
 func setConfig() {
 
 	if _, ok := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS"); !ok {
 		var key string
 
-		if err := openFireKey(&key); err != nil {
-			log.Println(err)
-		} else {
+		if err := openFireKey(&key); err == nil {
 			os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", key)
+		} else {
+			log.Println(err)
+			return
 		}
 	}
+
+	loadEnv("key.env")
 
 	if _, ok := os.LookupEnv("PORT"); !ok {
 		os.Setenv("PORT", "10000")
 	}
 
 	if _, ok := os.LookupEnv("LOGIN_KEY"); !ok {
-		os.Setenv("LOGIN_KEY", "21062022")
+		os.Setenv("LOGIN_KEY", "default_log_key")
 	}
 
 	if _, ok := os.LookupEnv("REGISTER_KEY"); !ok {
-		os.Setenv("REGISTER_KEY", "secret_register_key")
+		os.Setenv("REGISTER_KEY", "default_reg_key")
+	}
+}
+
+func loadEnv(file string) {
+	for _, dir := range dirs {
+		filepath := dir + file
+		err := godotenv.Load(filepath)
+		if err == nil {
+			break
+		}
 	}
 }
 
 func openFireKey(key *string) error {
+	var err error
+	var bytes []byte
 
-	bytes, err := os.ReadFile("key/healthcheck-key.json")
+	for _, dir := range dirs {
+		filepath := dir + "healthcheck-key.json"
+		bytes, err = os.ReadFile(filepath)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return err
 	}
@@ -47,7 +74,7 @@ func openFireKey(key *string) error {
 
 func checkLocal() bool {
 
-	if _, err := os.Stat("key/local-logs"); err == nil {
+	if value := os.Getenv("LOCAL_LOGS"); value == "true" {
 		return true
 	}
 	return false

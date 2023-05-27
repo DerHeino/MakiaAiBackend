@@ -1,12 +1,14 @@
 package route
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	c "health/clog"
 	"health/model"
 	"health/network"
 	"strings"
+	"sync"
 
 	"github.com/mitchellh/mapstructure"
 )
@@ -42,4 +44,18 @@ func PostInventory(inventoryMap map[string]interface{}) (string, error) {
 	}
 
 	return inventory.Id, nil
+}
+
+func DeleteInventory(id string, out *[]byte, wgDevice *sync.WaitGroup) error {
+	defer removeWaitGroup(wgDevice)
+
+	// firestore delete alone does not notify if document does not exists, so manually
+	doc, err := network.GetSingleDocument("inventory", id)
+	if err != nil {
+		return err
+	}
+	if out != nil {
+		*out, _ = json.Marshal(doc)
+	}
+	return network.DeleteFire("inventory", id)
 }

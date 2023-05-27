@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	bg "health/background"
+	c "health/clog"
 	"health/network"
 	"health/route"
 	"image/jpeg"
@@ -17,7 +18,7 @@ import (
 
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "HealthCheck-API \"/\"")
-	fmt.Println("Endpoint Hit: home")
+	fmt.Println("welcome")
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -34,20 +35,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, tokenString)
-}
-
-func getRegisterKey(w http.ResponseWriter, r *http.Request) {
-	username, err := route.ValidateToken(r.Header.Get("Authorization"), true)
-	if err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-		return
-	}
-
-	if key, err := route.BuildRegisterKey(username); err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-	} else {
-		fmt.Fprint(w, key)
-	}
 }
 
 func postRegister(w http.ResponseWriter, r *http.Request) {
@@ -71,19 +58,50 @@ func postRegister(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, tokenString)
 }
 
-func getProject(w http.ResponseWriter, r *http.Request) {
-	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-		return
-	}
-
-	projectsJson, err := network.GetAllDocuments("project")
+func getRegisterKey(w http.ResponseWriter, r *http.Request) {
+	username, err := route.ValidateToken(r.Header.Get("Authorization"), true)
 	if err != nil {
 		fmt.Fprint(w, "error: ", err.Error())
 		return
 	}
 
-	fmt.Fprint(w, string(projectsJson))
+	if key, err := route.BuildRegisterKey(username); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+	} else {
+		fmt.Fprint(w, key)
+	}
+}
+
+func getProject(w http.ResponseWriter, r *http.Request) {
+	getModel(&w, r, "project")
+}
+
+func getLocation(w http.ResponseWriter, r *http.Request) {
+	getModel(&w, r, "location")
+}
+
+func getDevice(w http.ResponseWriter, r *http.Request) {
+	getModel(&w, r, "device")
+}
+
+func getInventory(w http.ResponseWriter, r *http.Request) {
+	getModel(&w, r, "inventory")
+}
+
+func getModel(w *http.ResponseWriter, r *http.Request, model string) {
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(*w, "error: ", err.Error())
+		return
+	}
+
+	modelJson, err := network.GetAllDocuments(model)
+	if err != nil {
+		fmt.Fprint(*w, "error: ", err.Error())
+		return
+	}
+
+	(*w).Header().Set("Content-Type", "application/json; charset=utf-8")
+	fmt.Fprint(*w, string(modelJson))
 }
 
 func postProject(w http.ResponseWriter, r *http.Request) {
@@ -106,21 +124,6 @@ func postProject(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", projectId)
 }
 
-func getLocation(w http.ResponseWriter, r *http.Request) {
-	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-		return
-	}
-
-	locationJson, err := network.GetAllDocuments("location")
-	if err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-		return
-	}
-
-	fmt.Fprint(w, string(locationJson))
-}
-
 func postLocation(w http.ResponseWriter, r *http.Request) {
 	if _, err := route.ValidateToken(r.Header.Get("Authorization"), true); err != nil {
 		fmt.Fprint(w, "error: ", err.Error())
@@ -139,21 +142,6 @@ func postLocation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintf(w, "%s", locId)
-}
-
-func getDevice(w http.ResponseWriter, r *http.Request) {
-	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-		return
-	}
-
-	deviceJson, err := network.GetAllDocuments("device")
-	if err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-		return
-	}
-
-	fmt.Fprint(w, string(deviceJson))
 }
 
 func postDevice(w http.ResponseWriter, r *http.Request) {
@@ -179,21 +167,6 @@ func postDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "%s", devId)
-}
-
-func getInventory(w http.ResponseWriter, r *http.Request) {
-	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-		return
-	}
-
-	inventoryJson, err := network.GetAllDocuments("inventory")
-	if err != nil {
-		fmt.Fprint(w, "error: ", err.Error())
-		return
-	}
-
-	fmt.Fprint(w, string(inventoryJson))
 }
 
 func postInventory(w http.ResponseWriter, r *http.Request) {
@@ -248,9 +221,6 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "image/jpg")
-
 	buf := new(bytes.Buffer)
 	err := jpeg.Encode(buf, *image, nil)
 	if err != nil {
@@ -258,9 +228,9 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "image/jpg")
 	w.Write(buf.Bytes())
-
-	//fmt.Fprintf(w, "deviceId %s", deviceId)
 }
 
 func uploadImage(w http.ResponseWriter, r *http.Request) {
@@ -284,38 +254,116 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteProject(w http.ResponseWriter, r *http.Request) {
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), true); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	id := chi.URLParam(r, "projectId")
+	project := make([]byte, 0, 120)
+
+	if err := route.DeleteProject(id, &project); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(w, string(project))
+}
+
+func deleteLocation(w http.ResponseWriter, r *http.Request) {
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), true); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	id := chi.URLParam(r, "locationId")
+	location := make([]byte, 0, 360)
+
+	if err := route.DeleteLocation(id, &location, nil); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(w, string(location))
+}
+
+func deleteDevice(w http.ResponseWriter, r *http.Request) {
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	id := chi.URLParam(r, "deviceId")
+	device := make([]byte, 0, 360)
+
+	if err := route.DeleteDevice(id, &device, nil); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(w, string(device))
+}
+
+func deleteInventory(w http.ResponseWriter, r *http.Request) {
+	if _, err := route.ValidateToken(r.Header.Get("Authorization"), false); err != nil {
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	id := chi.URLParam(r, "inventoryId")
+	inventory := make([]byte, 0, 240)
+
+	if err := route.DeleteInventory(id, &inventory, nil); err != nil {
+		//error message contains id, so test will always be successful
+		fmt.Fprint(w, "error: ", err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(w, string(inventory))
+}
+
 func handleRequests() {
 	r := chi.NewRouter()
 
 	r.Get("/", homePage)
 
 	r.Post("/login", login)
-	r.Get("/register", getRegisterKey)
 	r.Post("/register", postRegister)
+	r.Get("/register", getRegisterKey)
 
 	r.Get("/project", getProject)
-	r.Post("/project", postProject)
-
 	r.Get("/location", getLocation)
-	r.Post("/location", postLocation)
-
 	r.Get("/device", getDevice)
-	r.Post("/device", postDevice)
-
 	r.Get("/inventory", getInventory)
-	r.Post("/inventory", postInventory)
 
+	r.Post("/project", postProject)
+	r.Post("/location", postLocation)
+	r.Post("/device", postDevice)
+	r.Post("/inventory", postInventory)
 	r.Post("/ping", postPing)
+
 	r.Get("/device/{deviceId}/image", getImage)
 	r.Post("/device/{deviceId}/image", uploadImage)
+
+	r.Delete("/project/{projectId}", deleteProject)
+	r.Delete("/location/{locationId}", deleteLocation)
+	r.Delete("/device/{deviceId}", deleteDevice)
+	r.Delete("/inventory/{inventoryId}", deleteInventory)
 
 	port := ":" + os.Getenv("PORT")
 	log.Fatal(http.ListenAndServe(port, r))
 }
 
 func main() {
-	initLogs()
 	setConfig()
+	initLogs()
+
+	c.InfoLog.Println("Starting Backend")
 
 	// build connection to firestore database
 	network.Start_firebase()

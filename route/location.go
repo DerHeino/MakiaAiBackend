@@ -1,12 +1,14 @@
 package route
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	c "health/clog"
 	"health/model"
 	"health/network"
 	"strings"
+	"sync"
 
 	"github.com/mitchellh/mapstructure"
 )
@@ -46,4 +48,36 @@ func validateLocation(locationMap map[string]interface{}) []string {
 		}
 	}
 	return append(missing, validateParameters(model.AddressParameters, locationMap["address"].(map[string]interface{}))...)
+}
+
+func DeleteLocation(locationId string, out *[]byte, wgProject *sync.WaitGroup) error {
+	defer removeWaitGroup(wgProject)
+
+	doc, err := network.GetSingleDocument("location", locationId)
+	if err != nil {
+		return err
+	}
+
+	jsonBytes, err := network.GetAllDocuments("device")
+	if err != nil {
+		return err
+	}
+
+	var device []model.Device
+	_ = json.Unmarshal(jsonBytes, &device)
+
+	wg := sync.WaitGroup{}
+	for _, dev := range device {
+
+		if dev.FID() == locationId {
+			wg.Add(1)
+			go DeleteDevice(dev.ID(), nil, &wg)
+		}
+	}
+	wg.Wait()
+
+	if out != nil {
+		*out, _ = json.Marshal(doc)
+	}
+	return network.DeleteFire("location", locationId)
 }

@@ -127,7 +127,7 @@ def login() -> bool:
 	return True
 
 
-def register(time: bool):
+def register(timeout: bool):
 	print(f"======== {'REGISTER TESTING':16s} ========")
 	otk: str = None
 	delete: bool = False
@@ -156,18 +156,18 @@ def register(time: bool):
 	if check_response(None, response.content, "", check_JWT):
 		otk = response.content.decode('utf8')
 
-		response = make_request(func=requests.post, route="register", jsonObj=USER_DICT["login_invalid"])
+		response = make_request(func=requests.post, route="register", token=otk, jsonObj=USER_DICT["login_invalid"])
 		check_response("register empty body", response.content, RESPONSE_ERR, contains)
 
-		response = make_request(func=requests.post, route="register", jsonObj=USER_DICT["login_invalid"])
+		response = make_request(func=requests.post, route="register", token=otk, jsonObj=USER_DICT["login_invalid"])
 		check_response("register invalid body", response.content, RESPONSE_ERR, contains)
 
-		response = make_request(func=requests.post, route="register", jsonObj=USER_DICT["post_register"])
+		response = make_request(func=requests.post, route="register", token=otk, jsonObj=USER_DICT["post_register"])
 		check_response("register already exists", response.content, RESPONSE_ERR, contains)
 
-		if time:
+		if timeout:
 			time.sleep(100)
-			response = make_request(func=requests.post, route="register", jsonObj=USER_DICT["post_register"])
+			response = make_request(func=requests.post, route="register", token=otk, jsonObj=USER_DICT["post_register"])
 			check_response("register timeout", response.content, RESPONSE_ERR, contains)
 		else:
 			check_skipped("register timeout")
@@ -248,15 +248,53 @@ def post_invalid():
 
 
 def delete():
-	pass
-	# inventory: dd5891ae-c966-42be-97ee-811fca8f90ac
-	# device: ce0c8bee-9844-4ff8-a842-6d506e8f2b65
-	# location: cf46a3c1-1ccb-45c6-bd0b-321271c69b87 (not nested after del ce0c8bee)
-	# project: id: fish (get id from get all)
 
-	# device: 9eb5c5dd-21a7-4020-8c67-a24eaea16790 (nested)
-	# location: 58a5ec1e-c5bf-4463-9c55-e4735bbf8422 (nested)
-	# project: 42df27c3-21e9-4ac8-83b3-24a8176dd825 (nested)
+	def get_fish() -> str:
+		route = 'project'
+		response = make_request(func=requests.get, route=route, token=USER_TOKEN)
+		projects: 'list' = json.loads(response.text)
+		for p in projects:
+			if p["name"] == "fish":
+				return p["_id"]
+		return ''
+	
+	print(f"======== DELETE ===================")
+	
+	# inventory: dd5891ae-c966-42be-97ee-811fca8f90ac
+	route = 'inventory' + '/' + 'dd5891ae-c966-42be-97ee-811fca8f90ac'
+	response = make_request(func=requests.delete, route=route, token=USER_TOKEN)
+	check_response("delete inventory", response.content, 'dd5891ae-c966-42be-97ee-811fca8f90ac', contains)
+
+	# device: ce0c8bee-9844-4ff8-a842-6d506e8f2b65
+	route = 'device' + '/' + 'ce0c8bee-9844-4ff8-a842-6d506e8f2b65'
+	response = make_request(func=requests.delete, route=route, token=USER_TOKEN)
+	check_response("delete device", response.content, 'ce0c8bee-9844-4ff8-a842-6d506e8f2b65', contains)
+
+	# location: cf46a3c1-1ccb-45c6-bd0b-321271c69b87 (not nested after del ce0c8bee)
+	route = 'location' + '/' + 'cf46a3c1-1ccb-45c6-bd0b-321271c69b87'
+	response = make_request(func=requests.delete, route=route, token=ADMIN_TOKEN)
+	check_response("delete location", response.content, 'cf46a3c1-1ccb-45c6-bd0b-321271c69b87', contains)
+
+	# project: id: fish (get id from get all)
+	fish = get_fish()
+	route = 'project' + '/' + fish
+	response = make_request(func=requests.delete, route = route, token=ADMIN_TOKEN)
+	check_response("delete project", response.content, fish, contains)
+
+	# device (nested): 9eb5c5dd-21a7-4020-8c67-a24eaea16790
+	route = 'device' + '/' + '9eb5c5dd-21a7-4020-8c67-a24eaea16790'
+	response = make_request(func=requests.delete, route=route, token=USER_TOKEN)
+	check_response("delete device (nested)", response.content, '9eb5c5dd-21a7-4020-8c67-a24eaea16790', contains)
+
+	# location (nested): 58a5ec1e-c5bf-4463-9c55-e4735bbf8422
+	route = 'location' + '/' + '58a5ec1e-c5bf-4463-9c55-e4735bbf8422'
+	response = make_request(func=requests.delete, route=route, token=ADMIN_TOKEN)
+	check_response("delete location (nested)", response.content, '58a5ec1e-c5bf-4463-9c55-e4735bbf8422', contains)
+
+	# project (nested): 42df27c3-21e9-4ac8-83b3-24a8176dd825
+	route = 'project' + '/' + '42df27c3-21e9-4ac8-83b3-24a8176dd825'
+	response = make_request(func=requests.delete, route=route, token=ADMIN_TOKEN)
+	check_response("delete project (nested)", response.content, '42df27c3-21e9-4ac8-83b3-24a8176dd825', contains)
 
 
 def make_request(func: Callable, route: str, token: str = None, jsonObj: 'dict' = None, data: 'str' = None) -> requests.Response:
@@ -294,10 +332,10 @@ def main():
 
 	open_files()
 	if login():
-		register(time=False)
+		register(timeout=True)
 		post_valid()
 		post_invalid()
-		# delete()
+		delete()
 
 
 if __name__ == "__main__":

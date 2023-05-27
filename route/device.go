@@ -1,6 +1,7 @@
 package route
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	bg "health/background"
@@ -9,6 +10,7 @@ import (
 	"health/network"
 	"image"
 	"strings"
+	"sync"
 
 	"github.com/mitchellh/mapstructure"
 )
@@ -32,13 +34,18 @@ func PostDevice(deviceMap map[string]interface{}) (string, error) {
 	}
 
 	if err := network.SetModelFireWrapper(&device, "device", "location"); err == nil {
+		devMap := bg.GetDeviceMap()
+
 		if _, ok := deviceMap["lastPing"].(map[string]interface{}); ok {
 			_, err := PostPing(deviceMap["lastPing"].(map[string]interface{}))
 			if err != nil {
+				devMap.AddDevice(device.Id)
 				return device.Id, err
 			}
+			devMap.AddDevice(device.Id)
 			return device.Id, nil
 		} else {
+			devMap.AddDevice(device.Id)
 			return device.Id, nil
 		}
 
@@ -47,12 +54,43 @@ func PostDevice(deviceMap map[string]interface{}) (string, error) {
 	}
 }
 
+func DeleteDevice(deviceId string, out *[]byte, wgLocation *sync.WaitGroup) error {
+	defer removeWaitGroup(wgLocation)
+
+	doc, err := network.GetSingleDocument("device", deviceId)
+	if err != nil {
+		return err
+	}
+
+	jsonBytes, err := network.GetAllDocuments("inventory")
+	if err != nil {
+		return err
+	}
+
+	var inventory []model.Inventory
+	_ = json.Unmarshal(jsonBytes, &inventory)
+
+	wg := sync.WaitGroup{}
+	for _, inv := range inventory {
+
+		if inv.FID() == deviceId {
+			wg.Add(1)
+			go DeleteInventory(inv.ID(), nil, &wg)
+		}
+	}
+	wg.Wait()
+
+	bg.GetDeviceMap().Delete(deviceId)
+	if out != nil {
+		*out, _ = json.Marshal(doc)
+	}
+	return network.DeleteFire("device", deviceId)
+}
+
 func PostImage(deviceId string, image *image.Image) bool {
-	devMap := bg.GetDeviceMap()
-	return devMap.Add(deviceId, image)
+	return bg.GetDeviceMap().Add(deviceId, image)
 }
 
 func GetImage(deviceId string) *image.Image {
-	devMap := bg.GetDeviceMap()
-	return devMap.Get(deviceId)
+	return bg.GetDeviceMap().Get(deviceId)
 }

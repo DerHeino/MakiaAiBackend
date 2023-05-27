@@ -161,6 +161,17 @@ func setUser() {
 	}
 }
 
+func GetSingleDocument(collection string, id string) (map[string]interface{}, error) {
+
+	dsnap, err := global_client.Collection(collection).Doc(id).Get(global_ctx)
+	if err != nil {
+		c.ErrorLog.Println(err.Error())
+		return nil, err
+	}
+
+	return dsnap.Data(), nil
+}
+
 // "/project", "/location", "/device", "/inventory" GET requests
 // all return an array with its supported model.
 //
@@ -272,4 +283,16 @@ func SetUserFire(user *model.UserCredentials) error {
 		c.ErrorLog.Printf("user %s already exists\n", user.Username)
 		return errors.New("user already exists")
 	}
+}
+
+func DeleteFire(collection string, id string) error {
+
+	_, err := global_client.Collection(collection).Doc(id).Delete(global_ctx)
+	if err != nil {
+		c.ErrorLog.Println(err.Error())
+		return err
+	}
+
+	c.InfoLog.Printf("%s: %s deleted\n", collection, id)
+	return nil
 }
