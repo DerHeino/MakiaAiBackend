@@ -34,7 +34,7 @@ func PostDevice(deviceMap map[string]interface{}) (string, error) {
 	}
 
 	if device.Status == nil {
-		*device.Status = "OFFLINE"
+		device.Status = &model.DeviceStatus[2]
 	}
 
 	if err := network.SetModelFireWrapper(&device, "device", "location"); err == nil {
