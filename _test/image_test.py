@@ -17,7 +17,7 @@ class INIT_INFO:
 	DEVICE: str
 	TOKEN: str
 
-DOMAIN: str = "http://localhost:10000"
+DOMAIN: str = "https://healthapi-u6xn.onrender.com"
 
 HEADER = {
 	"User-Agent":"python-test-routine",
@@ -26,7 +26,7 @@ HEADER = {
 
 
 def loop_images(d: INIT_INFO):
-	
+
 	dir = os.path.join(os.getcwd(), 'images')
 	domain = d.DOMAIN + '/' + 'device' + '/' + d.DEVICE + '/' + 'image'
 
@@ -89,30 +89,25 @@ def init_models() -> 'tuple[str, str]':
 	route_device = DOMAIN + '/' + 'device'
 	requests.post(url=route_device, headers=header, json=init_dict["device"])
 	device = init_dict["device"]["_id"]
- 
+
 	return device, token
 
 
 def args() -> 'tuple[int, bool]':
 	t, d = 1, False
-	if len(sys.argv) > 1:
-		try:
-			t = int(sys.argv[1])
-		except ValueError:
-			pass
-	for idx, arg in enumerate(sys.argv):
-		if idx == 1:
-			try:
-				t = int(arg)
-			except ValueError:
-				pass
-		if idx == 2:
-			if arg == 'display':
-				d = True
-			if arg == ('True' or 'true'):
-				d = True
-	
+	for _, arg in enumerate(sys.argv):
+		if arg.isdigit():
+			t = int(arg)
+			continue
+		if arg == 'display':
+			d = True
+			continue
+		if arg == ('True' or 'true'):
+			d = True
+			continue
+
 	return t, d
+
 
 def main():
 	min, display = args()
@@ -121,17 +116,17 @@ def main():
 
 	device, token = init_models()
 	info = INIT_INFO(DOMAIN=DOMAIN, HEADER=HEADER, DEVICE=device, TOKEN=token)
- 
+
 	p1 = Process(target=loop_images, args=[info])
 	p1.start()
 
-	p2 = Process(target=get_images, args=[info, display])
-	p2.start()
+	#p2 = Process(target=get_images, args=[info, display])
+	#p2.start()
 
 	time.sleep(60*min)
 	p1.terminate()
-	p2.terminate()
- 
+	#p2.terminate()
+
 	exit(0)
 
 

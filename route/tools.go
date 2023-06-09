@@ -30,6 +30,18 @@ func validateParameters(parameter []string, model map[string]interface{}) []stri
 	return missing
 }
 
+func decodeTimeWrapper(input interface{}) time.Time {
+	switch v := input.(type) {
+	case string:
+		return decodeTime(v)
+	case int:
+		intTime := strconv.Itoa(v)
+		return decodeTime(intTime)
+	default:
+		return time.Time{}
+	}
+}
+
 // Converts timestamp (UNIX and RFC3339) string to time struct
 func decodeTime(input string) time.Time {
 

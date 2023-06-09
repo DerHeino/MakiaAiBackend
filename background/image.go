@@ -69,7 +69,7 @@ func (devMap *DeviceMap) AddDevice(id string) (b bool) {
 	return
 }
 
-func (devMap *DeviceMap) Add(id string, img *image.Image) (b bool) {
+func (devMap *DeviceMap) AddImage(id string, img *image.Image) (b bool) {
 	devMap.l.Lock()
 	if entry, ok := devMap.devices[id]; ok {
 		entry.image = img

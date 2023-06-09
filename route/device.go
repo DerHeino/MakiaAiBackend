@@ -92,7 +92,7 @@ func DeleteDevice(deviceId string, out *[]byte, wgLocation *sync.WaitGroup) erro
 }
 
 func PostImage(deviceId string, image *image.Image) bool {
-	return bg.GetDeviceMap().Add(deviceId, image)
+	return bg.GetDeviceMap().AddImage(deviceId, image)
 }
 
 func GetImage(deviceId string) *image.Image {

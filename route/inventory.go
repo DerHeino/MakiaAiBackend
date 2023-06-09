@@ -32,11 +32,11 @@ func PostInventory(inventoryMap map[string]interface{}) (string, error) {
 	}
 
 	if val, ok := inventoryMap["buyDate"]; ok {
-		inventory.BuyDate = decodeTime(val.(string))
+		inventory.BuyDate = decodeTimeWrapper(val)
 	}
 
 	if val, ok := inventoryMap["montageDate"]; ok {
-		inventory.MontageDate = decodeTime(val.(string))
+		inventory.MontageDate = decodeTimeWrapper(val)
 	}
 
 	if err := network.SetModelFireWrapper(&inventory, "inventory", "device"); err != nil {

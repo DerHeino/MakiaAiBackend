@@ -152,6 +152,7 @@ def register(timeout: bool):
 	else:
 		check_skipped("register user success")
 
+
 	response = make_request(func=requests.post, route="register", jsonObj=USER_DICT["login_invalid"])
 	check_response("register no token", response.content, RESPONSE_ERR, contains)
 
@@ -228,13 +229,13 @@ def post_valid():
 
 
 def post_invalid():
-	
+
 	for key in INVALID_DICT:
 		model_list = INVALID_DICT[key]
 		token = ADMIN_TOKEN if key in ('project', 'location') else USER_TOKEN
 
 		print(f"======== ERROR {key:10s} ========")
-		
+
 		i = 1
 		for model in model_list:
 			if key in ('ping', 'inventory'):
@@ -263,7 +264,7 @@ def delete():
 			if p["name"] == "fish":
 				return p["_id"]
 		return ''
-	
+
 	print(f"======== DELETE ===================")
 	
 	# inventory: dd5891ae-c966-42be-97ee-811fca8f90ac
@@ -308,7 +309,7 @@ def make_request(func: Callable, route: str, token: str = None, jsonObj: 'dict' 
 	header = HEADER.copy()
 	if token:
 		header["Authorization"] = f"Bearer {token}"
-	
+
 	return func(url, headers=header, json=jsonObj, data=data)
 
 
@@ -336,7 +337,7 @@ def main():
 
 	open_files()
 	if login():
-		register(timeout=True)
+		register(timeout=False)
 		post_valid()
 		post_invalid()
 		delete()

@@ -31,7 +31,7 @@ func PostPing(pingMap map[string]interface{}) (string, error) {
 	}
 
 	if val, ok := pingMap["timestamp"]; ok {
-		ping.Timestamp = decodeTime(val.(string))
+		ping.Timestamp = decodeTimeWrapper(val)
 	}
 
 	if val, err := network.UpdatePingFire(&ping); err == nil {

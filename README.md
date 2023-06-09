@@ -1,15 +1,9 @@
 HealthCheck-Backend
 ======
-Bachelor Project from Heinrich Chan
-
 The HealthCheck-Backend is a status tracker and manager that allows its users to keep track of devices (including their equipment) placed in given locations within different projects rewritten in GO.
 
-The placed devices are capable of pinging their current status (ONLINE, OFFLINE, WARNING). Depinding on their equipment devices are also capable of sending images (jpeg/png format), which are only stored within the RAM of the backend.
+The placed devices are capable of pinging their current status (ONLINE, OFFLINE, WARNING). Depinding on their equipment devices are also capable of sending images (jpeg format), which are only stored within the RAM of the backend.
 
-As in right now the API supports all routes just as the original backend.
+As in right now the API supports all routes just as the original backend and has its features extended with a register system and support for DELETE operations.
 
-Roadmap (2023)
-------
-* (Maybe) Add an option for graceful shutdown which has been introduced with GO 1.18
-* Resolve post and update functionality depending on empty or missing parameters (possible solution with optional nil)
-* Implement DELETE request method for models /project, /locations (admin only), /devices, /inventory (all users)
+For functionality demonstration purposes the app https://github.com/ManuelSperl/makia-ai-app was used. The modified .apk can found under ./_frontend in main-branch
