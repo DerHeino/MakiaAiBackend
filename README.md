@@ -6,4 +6,7 @@ The placed devices are capable of pinging their current status (ONLINE, OFFLINE,
 
 As in right now the API supports all routes just as the original backend and has its features extended with a register system and support for DELETE operations.
 
+The API is hosted under render.com and can be accessed through https://healthapi-u6xn.onrender.com. However because the free tier is used for hosting, the backend will go into hibernation after a certain idle time.
+This causes images in the RAM to get lost and accessing the API during hibernation will take some time or outright reject the request until it is ready again.
+
 For functionality demonstration purposes the app https://github.com/ManuelSperl/makia-ai-app was used. The modified .apk can found under ./_frontend in main-branch
